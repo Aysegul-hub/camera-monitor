@@ -1,0 +1,323 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #0f172a;
+    color: #f8fafc;
+    min-height: 100vh;
+}
+
+.app {
+    width: 96%;
+    max-width: 1700px;
+    margin: 0 auto;
+    padding: 30px 0;
+}
+
+/*HEADER*/
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    font-size: 30px;
+    margin-bottom: 8px;
+}
+
+.header p {
+    color: #94a3b8;
+    font-size: 15px;
+}
+
+.system-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    background: #172033;
+    border: 1px solid #26344d;
+
+    padding: 10px 16px;
+    border-radius: 10px;
+
+    color: #cbd5e1;
+    font-size: 14px;
+}
+
+.status-dot {
+    width: 9px;
+    height: 9px;
+    background: #22c55e;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #22c55e;
+}
+
+
+/*MAIN*/
+
+.main-content {
+    display: grid;
+    grid-template-columns: 230px 1fr;
+    gap: 18px;
+}
+
+
+/*PANELS*/
+
+.camera-panel,
+.video-panel {
+    background: #111c31;
+    border: 1px solid #26344d;
+    border-radius: 16px;
+}
+
+.camera-panel {
+    padding: 20px;
+}
+
+.video-panel {
+    padding: 16px;
+}
+
+
+/*CAMERA LIST*/
+
+.panel-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 20px;
+}
+
+.panel-title h2 {
+    font-size: 18px;
+}
+
+.panel-title span {
+    background: #1e293b;
+    color: #cbd5e1;
+
+    min-width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+}
+
+.camera-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.camera-item {
+    background: #172033;
+    border: 1px solid #26344d;
+
+    padding: 14px;
+    border-radius: 12px;
+
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.camera-item:hover {
+    background: #1d2a42;
+    transform: translateY(-1px);
+}
+
+.camera-item.selected {
+    border-color: #22c55e;
+    background: #172b27;
+}
+
+.camera-name {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.camera-type {
+    color: #94a3b8;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.camera-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    color: #4ade80;
+    font-size: 13px;
+}
+
+.camera-status-dot {
+    width: 7px;
+    height: 7px;
+    background: #22c55e;
+    border-radius: 50%;
+}
+
+
+/*VIDEO HEADER*/
+
+.video-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 18px;
+}
+
+.video-header h2 {
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.video-header p {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.live-badge {
+    background: #3b171c;
+    color: #f87171;
+
+    padding: 7px 12px;
+    border-radius: 8px;
+
+    font-size: 12px;
+    font-weight: bold;
+}
+
+
+/*VIDEO*/
+
+.video-container {
+    position: relative;
+
+    width: 100%;
+    height: 750px;
+
+    background: #020617;
+    border-radius: 12px;
+
+    overflow: hidden;
+}
+
+#video {
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+
+    display: none;
+}
+
+.no-camera {
+    position: absolute;
+
+    inset: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+}
+
+.camera-icon {
+    font-size: 55px;
+    margin-bottom: 15px;
+}
+
+.no-camera h3 {
+    margin-bottom: 8px;
+}
+
+.no-camera p {
+    color: #64748b;
+    font-size: 14px;
+}
+
+
+/* VIDEO INFO*/
+
+.video-info {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 15px;
+
+    margin-top: 18px;
+}
+
+.video-info > div {
+    background: #172033;
+    border: 1px solid #26344d;
+
+    padding: 14px;
+    border-radius: 10px;
+}
+
+.info-label {
+    display: block;
+
+    color: #64748b;
+    font-size: 12px;
+
+    margin-bottom: 6px;
+}
+
+.video-info strong {
+    font-size: 14px;
+}
+
+
+/*RESPONSIVE*/
+
+@media (max-width: 900px) {
+
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+
+    .video-container {
+        height: 400px;
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .video-info {
+        grid-template-columns: 1fr;
+    }
+
+    .video-container {
+        height: 300px;
+    }
+
+}

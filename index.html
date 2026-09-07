@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Camera Monitor</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Üst başlık -->
+        <header class="header">
+            <div>
+                <h1>📹 Camera Monitor</h1>
+                <p>Kamera bağlantılarını ve canlı görüntüleri takip edin</p>
+            </div>
+
+            <div class="system-status">
+                <span class="status-dot"></span>
+                Sistem Aktif
+            </div>
+        </header>
+
+
+        <!-- Ana içerik -->
+        <main class="main-content">
+
+            <!-- Sol kamera listesi -->
+            <aside class="camera-panel">
+
+                <div class="panel-title">
+                    <h2>Bağlı Kameralar</h2>
+                    <span id="cameraCount">0</span>
+                </div>
+
+                <div id="cameraList" class="camera-list">
+                    <!-- Kameralar JavaScript ile buraya gelecek -->
+                </div>
+
+            </aside>
+
+
+            <!-- Sağ görüntü alanı -->
+            <section class="video-panel">
+
+                <div class="video-header">
+                    <div>
+                        <h2>Canlı Görüntü</h2>
+                        <p id="selectedCamera">Kamera seçilmedi</p>
+                    </div>
+
+                    <span class="live-badge">
+                        ● CANLI
+                    </span>
+                </div>
+
+                <div class="video-container">
+
+                    <video
+                        id="video"
+                        autoplay
+                        playsinline>
+                    </video>
+
+                    <div id="noCamera" class="no-camera">
+                        <div class="camera-icon">📹</div>
+                        <h3>Kamera seçilmedi</h3>
+                        <p>Görüntüyü görmek için soldan bir kamera seçin.</p>
+                    </div>
+
+                </div>
+
+                <div class="video-info">
+
+                    <div>
+                        <span class="info-label">Durum</span>
+                        <strong id="connectionStatus">Bekliyor</strong>
+                    </div>
+
+                    <div>
+                        <span class="info-label">Kamera</span>
+                        <strong id="cameraName">-</strong>
+                    </div>
+
+                    <div>
+                        <span class="info-label">Son Güncelleme</span>
+                        <strong id="lastUpdate">-</strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
