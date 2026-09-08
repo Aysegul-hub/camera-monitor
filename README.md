@@ -90,7 +90,7 @@ Daha sonra `index.html` dosyasını **Live Server** ile açabilirsiniz.
 
 ## 📸 Screenshot
 
-![Camera Monitor](screenshot.png)
+![Camera Monitor](screenshotcm.png)
 
 ## 📁 Proje Yapısı
 
