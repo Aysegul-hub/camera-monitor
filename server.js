@@ -1,10 +1,12 @@
 const express = require("express");
 const { spawn } = require("child_process");
+const cors = require("cors");
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+app.use(cors());
 app.use(express.static("."));
 
 let rtspUrl = null;
@@ -30,11 +32,28 @@ app.post("/api/connect", (req, res) => {
         ffmpegProcess = null;
     }
 
+    res.json({
+        success: true,
+        message: "RTSP adresi alındı."
+    });
+});
+
+
+// Kamera bağlantısını kes
+app.post("/api/disconnect", (req, res) => {
+
+    // FFmpeg çalışıyorsa kapat
+    if (ffmpegProcess) {
+        ffmpegProcess.kill();
+        ffmpegProcess = null;
+    }
+
+    // RTSP adresini temizle
     rtspUrl = null;
 
     res.json({
         success: true,
-        message: "RTSP adresi alındı."
+        message: "Kamera bağlantısı kesildi."
     });
 });
 
@@ -48,19 +67,14 @@ app.get("/api/stream", (req, res) => {
 
     // FFmpeg başlat
     ffmpegProcess = spawn("ffmpeg", [
-        "-rtsp_transport", "tcp",
-        "-loglevel","error",
-
+        "-loglevel", "error",
+        "-rtsp_transport", "udp",
+        "-fflags", "nobuffer",
         "-i", rtspUrl,
-
         "-an",
-
-        "-c:v", "libx264",
-        "-preset", "ultrafast",
-        "-tune", "zerolatency",
-
+        "-c:v", "copy",
+        
         "-f", "mpegts",
-
         "pipe:1"
     ]);
 
@@ -97,6 +111,7 @@ app.get("/api/stream", (req, res) => {
 });
 
 
+// Sunucuyu başlat
 app.listen(PORT, () => {
     console.log(`Camera Monitor çalışıyor: http://localhost:${PORT}`);
 });

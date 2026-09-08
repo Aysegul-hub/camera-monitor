@@ -15,7 +15,7 @@ const ethernetButton = document.getElementById("ethernetButton");
 const ethernetSection = document.getElementById("ethernetSection");
 const rtspUrl = document.getElementById("rtspUrl");
 const connectButton = document.getElementById("connectButton");
-const disconnetButton = document.getElementById("disconnectButton");
+const disconnectButton = document.getElementById("disconnectButton");
 const rtspStatus = document.getElementById("rtspStatus");
 
 const cameraPanelTitle = document.getElementById("cameraPanelTitle");
@@ -314,7 +314,7 @@ async function connectEthernetCamera() {
 
 
         // RTSP adresini Node.js'e gönder
-        const response = await fetch("/api/connect", {
+        const response = await fetch("http://localhost:3000/api/connect", {
 
             method: "POST",
 
@@ -431,7 +431,10 @@ function addEthernetCamera() {
 // ETHERNET CANLI GÖRÜNTÜ
 // ========================================
 
+
 function startEthernetPlayer() {
+
+    latencyValues = [] ;
 
     // mpegts.js destekleniyor mu?
     if (!mpegts.isSupported()) {
@@ -468,8 +471,13 @@ function startEthernetPlayer() {
 
         isLive: true,
 
-        url: "/api/stream"
+        url: "http://localhost:3000/api/stream"
 
+    }, {
+        enableStashBuffer:false,
+        liveBufferLatencyChasing: true,
+        liveBufferLatencyMaxLatency: 1.5,
+        liveBufferLatencyMinRemain: 0.5
     });
 
 
@@ -598,7 +606,7 @@ disconnectButton.addEventListener("click", async () => {
     stopEthernetPlayer();
 
     try {
-        await fetch("/api/disconnect", {
+        await fetch("http://localhost:3000/api/disconnect", {
             method: "POST"
         });
 
@@ -633,3 +641,58 @@ disconnectButton.addEventListener("click", async () => {
             "Bağlantı kesilemedi.";
     }
 });
+
+// ========================================
+// CANLI GECİKME ÖLÇÜMÜ
+// ========================================
+
+let latencyValues = [];
+
+function updateLatency() {
+
+    const latencyDisplay =
+        document.getElementById("latencyDisplay");
+
+    if (
+        currentMode !== "ethernet" ||
+        !currentPlayer ||
+        video.readyState < 2 ||
+        video.buffered.length === 0
+    ) {
+        return;
+    }
+
+    const liveEdge =
+        video.buffered.end(video.buffered.length - 1);
+
+    const currentTime =
+        video.currentTime;
+
+    const latency =
+        liveEdge - currentTime;
+
+    // Son 8 ölçümü sakla
+    latencyValues.push(latency);
+
+    if (latencyValues.length > 8) {
+        latencyValues.shift();
+    }
+
+    // Ortalama gecikme
+    const averageLatency =
+        latencyValues.reduce((a, b) => a + b, 0) /
+        latencyValues.length;
+
+    const milliseconds =
+        Math.round(averageLatency * 1000);
+
+    latencyDisplay.innerHTML = `
+        <span class="latency-dot"></span>
+        <span class="latency-label">CANLI GECİKME</span>
+        <strong>${milliseconds} ms</strong>
+    `;
+}
+
+
+// Her 500 ms'de bir ölç
+setInterval(updateLatency, 500);
