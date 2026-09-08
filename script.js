@@ -696,3 +696,104 @@ function updateLatency() {
 
 // Her 500 ms'de bir ölç
 setInterval(updateLatency, 500);
+
+// =========================
+// Hikvision Kamera Kontrolleri
+// =========================
+
+const dayModeButton = document.getElementById("dayModeButton");
+const autoModeButton = document.getElementById("autoModeButton");
+const nightModeButton = document.getElementById("nightModeButton");
+
+const normalImageButton = document.getElementById("normalImageButton");
+const rotateImageButton = document.getElementById("rotateImageButton");
+
+
+// Gece / gündüz modunu değiştir
+async function setNightMode(mode, button) {
+
+    try {
+
+        const response = await fetch(
+            "http://localhost:3000/api/camera/night-mode",
+            {
+                method: "PUT",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    mode: mode
+                })
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Kamera ayarı değiştirilemedi.");
+        }
+
+        // Aktif butonu değiştir
+        document
+            .querySelectorAll(".control-buttons .control-button")
+            .forEach(btn => {
+                btn.classList.remove("active");
+            });
+
+        button.classList.add("active");
+
+        console.log("Gece/Gündüz modu:", mode);
+
+    } catch (error) {
+
+        console.error("Kamera kontrol hatası:", error);
+
+        alert("Kamera ayarı değiştirilemedi.");
+    }
+}
+
+
+// Gündüz
+dayModeButton.addEventListener("click", () => {
+    setNightMode("day", dayModeButton);
+});
+
+
+// Otomatik
+autoModeButton.addEventListener("click", () => {
+    setNightMode("auto", autoModeButton);
+});
+
+
+// Gece
+nightModeButton.addEventListener("click", () => {
+    setNightMode("night", nightModeButton);
+});
+
+
+// =========================
+// Görüntü döndürme
+// =========================
+
+let imageRotated = false;
+
+normalImageButton.addEventListener("click", () => {
+
+    imageRotated = false;
+
+    video.style.transform = "rotate(0deg)";
+
+    normalImageButton.classList.add("active");
+    rotateImageButton.classList.remove("active");
+});
+
+
+rotateImageButton.addEventListener("click", () => {
+
+    imageRotated = true;
+
+    video.style.transform = "rotate(180deg)";
+
+    rotateImageButton.classList.add("active");
+    normalImageButton.classList.remove("active");
+});
