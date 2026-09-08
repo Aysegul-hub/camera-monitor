@@ -76,6 +76,8 @@ Backend'i başlatın:
 node server.js
 ```
 
+*** Sorun yaşamanız halinde terminale taskkill /F /IM node.exe yazıp sonra yeniden node server.js diye deneyebilirsiniz...
+
 Daha sonra `index.html` dosyasını **Live Server** ile açabilirsiniz.
 
 > Ethernet / RTSP kamera görüntüsünün çalışması için Node.js backend ve FFmpeg'in çalışıyor olması gerekir.
