@@ -9,10 +9,26 @@ const cameraName = document.getElementById("cameraName");
 const connectionStatus = document.getElementById("connectionStatus");
 const lastUpdate = document.getElementById("lastUpdate");
 
+const usbButton = document.getElementById("usbButton");
+const ethernetButton = document.getElementById("ethernetButton");
+
+const ethernetSection = document.getElementById("ethernetSection");
+const rtspUrl = document.getElementById("rtspUrl");
+const connectButton = document.getElementById("connectButton");
+const disconnetButton = document.getElementById("disconnectButton");
+const rtspStatus = document.getElementById("rtspStatus");
+
+const cameraPanelTitle = document.getElementById("cameraPanelTitle");
+
 let currentStream = null;
+let currentPlayer = null;
+let currentMode = "usb";
 
 
-// Kameraları listele
+// ========================================
+// USB KAMERALAR
+// ========================================
+
 async function listCameras() {
 
     const devices = await navigator.mediaDevices.enumerateDevices();
@@ -26,7 +42,6 @@ async function listCameras() {
     cameraCount.textContent = cameras.length;
 
 
-    // Hiç kamera yoksa
     if (cameras.length === 0) {
 
         cameraList.innerHTML = `
@@ -40,7 +55,6 @@ async function listCameras() {
     }
 
 
-    // Kameraları ekrana ekle
     cameras.forEach((camera, index) => {
 
         const cameraItem = document.createElement("div");
@@ -91,10 +105,17 @@ function getCameraType(label) {
 }
 
 
-// Kamerayı seç
+// USB kamerayı seç
 async function selectCamera(camera, cameraItem) {
 
-    console.log("Kamera seçildi:", camera.label);
+    console.log("USB kamera seçildi:", camera.label);
+
+    currentMode = "usb";
+
+
+    // Ethernet player varsa kapat
+    stopEthernetPlayer();
+
 
     // Önceki seçimi kaldır
     document.querySelectorAll(".camera-item").forEach(item => {
@@ -104,19 +125,19 @@ async function selectCamera(camera, cameraItem) {
     cameraItem.classList.add("selected");
 
 
-    // Eski kamera akışını kapat
+    // Eski USB akışını kapat
     if (currentStream) {
 
         currentStream.getTracks().forEach(track => {
             track.stop();
         });
 
+        currentStream = null;
     }
 
 
     try {
 
-        // Seçilen kamerayı aç
         currentStream = await navigator.mediaDevices.getUserMedia({
             video: {
                 deviceId: {
@@ -127,7 +148,6 @@ async function selectCamera(camera, cameraItem) {
         });
 
 
-        // Görüntüyü göster
         video.srcObject = currentStream;
 
         video.style.display = "block";
@@ -135,67 +155,481 @@ async function selectCamera(camera, cameraItem) {
         noCamera.style.display = "none";
 
 
-        // Bilgileri güncelle
-        selectedCamera.textContent = camera.label;
+        selectedCamera.textContent = camera.label || "USB Kamera";
 
-        cameraName.textContent = camera.label;
+        cameraName.textContent = camera.label || "USB Kamera";
 
         connectionStatus.textContent = "Bağlı";
 
-        lastUpdate.textContent = new Date().toLocaleTimeString("tr-TR");
+        lastUpdate.textContent =
+            new Date().toLocaleTimeString("tr-TR");
+
+    } catch (error) {
+
+        console.error("USB kamera açılamadı:", error);
+
+        connectionStatus.textContent = "Bağlantı Hatası";
+    }
+}
+
+
+// ========================================
+// USB / ETHERNET MOD DEĞİŞTİRME
+// ========================================
+
+usbButton.addEventListener("click", () => {
+
+    currentMode = "usb";
+
+    usbButton.classList.add("active");
+    ethernetButton.classList.remove("active");
+
+    ethernetSection.style.display = "none";
+
+    cameraPanelTitle.textContent = "Bağlı USB Kameralar";
+
+    stopEthernetPlayer();
+
+    video.srcObject = null;
+
+    video.style.display = "none";
+
+    noCamera.style.display = "flex";
+
+    selectedCamera.textContent = "Kamera seçilmedi";
+
+    cameraName.textContent = "-";
+
+    connectionStatus.textContent = "Bekliyor";
+
+    listCameras();
+});
+
+
+ethernetButton.addEventListener("click", () => {
+
+    currentMode = "ethernet";
+
+    ethernetButton.classList.add("active");
+    usbButton.classList.remove("active");
+
+    ethernetSection.style.display = "block";
+
+    cameraPanelTitle.textContent = "Ethernet Kameralar";
+
+    stopUSBStream();
+
+    cameraList.innerHTML = `
+        <div class="empty-state">
+            <div>🌐</div>
+            <p>RTSP kamera ekleyin</p>
+        </div>
+    `;
+
+    cameraCount.textContent = "0";
+
+    video.style.display = "none";
+
+    noCamera.style.display = "flex";
+
+    selectedCamera.textContent = "Ethernet kamera seçilmedi";
+
+    cameraName.textContent = "-";
+
+    connectionStatus.textContent = "Bekliyor";
+
+});
+
+
+// ========================================
+// USB STREAM KAPAT
+// ========================================
+
+function stopUSBStream() {
+
+    if (currentStream) {
+
+        currentStream.getTracks().forEach(track => {
+            track.stop();
+        });
+
+        currentStream = null;
+    }
+
+    video.srcObject = null;
+}
+
+
+// ========================================
+// ETHERNET / RTSP BAĞLANTISI
+// ========================================
+
+connectButton.addEventListener("click", connectEthernetCamera);
+
+
+async function connectEthernetCamera() {
+
+    const url = rtspUrl.value.trim();
+
+
+    // RTSP adresi boş mu?
+    if (!url) {
+
+        rtspStatus.textContent =
+            "Lütfen RTSP adresini girin.";
+
+        return;
+    }
+
+
+    // RTSP adresi mi?
+    if (!url.startsWith("rtsp://")) {
+
+        rtspStatus.textContent =
+            "Geçerli bir RTSP adresi girin.";
+
+        return;
+    }
+
+
+    console.log("Ethernet kamera bağlanıyor...");
+
+
+    connectButton.disabled = true;
+
+    connectButton.textContent = "⏳ Bağlanıyor...";
+
+    rtspStatus.textContent =
+        "RTSP kameraya bağlanılıyor...";
+
+
+    try {
+
+        // USB akışını kapat
+        stopUSBStream();
+
+
+        // Eski Ethernet player varsa kapat
+        stopEthernetPlayer();
+
+
+        // RTSP adresini Node.js'e gönder
+        const response = await fetch("/api/connect", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                rtspUrl: url
+            })
+
+        });
+
+
+        const data = await response.json();
+
+
+        if (!response.ok) {
+            throw new Error(data.error || "Bağlantı başarısız.");
+        }
+
+
+        console.log("RTSP adresi backend'e gönderildi.");
+
+
+        // Sol listeye Ethernet kamerayı ekle
+        addEthernetCamera();
+
+
+        // FFmpeg stream'ini oynat
+        startEthernetPlayer();
+
+
+        rtspStatus.textContent =
+            "Kamera bağlandı.";
+
+        connectionStatus.textContent =
+            "Bağlı";
+
+        selectedCamera.textContent =
+            "Ethernet Kamera";
+
+        cameraName.textContent =
+            "Ethernet Kamera";
+
+        lastUpdate.textContent =
+            new Date().toLocaleTimeString("tr-TR");
 
 
     } catch (error) {
 
-        console.error("Kamera açılamadı:", error);
+        console.error("Ethernet kamera hatası:", error);
 
-        connectionStatus.textContent = "Bağlantı Hatası";
+        rtspStatus.textContent =
+            "Bağlantı hatası.";
 
+        connectionStatus.textContent =
+            "Bağlantı Hatası";
+
+    } finally {
+
+        connectButton.disabled = false;
+
+        connectButton.textContent =
+            "🔗 Kameraya Bağlan";
     }
-
 }
 
 
-// İlk kameraları bul
+// ========================================
+// ETHERNET KAMERAYI LİSTEYE EKLE
+// ========================================
+
+function addEthernetCamera() {
+
+    cameraList.innerHTML = "";
+
+    cameraCount.textContent = "1";
+
+
+    const cameraItem = document.createElement("div");
+
+    cameraItem.className = "camera-item selected";
+
+
+    cameraItem.innerHTML = `
+        <div class="camera-name">
+            🌐 Ethernet Kamera
+        </div>
+
+        <div class="camera-type">
+            RTSP Kamera
+        </div>
+
+        <div class="camera-status">
+            <span class="camera-status-dot"></span>
+            Bağlı
+        </div>
+    `;
+
+
+    cameraItem.addEventListener("click", () => {
+
+        startEthernetPlayer();
+
+    });
+
+
+    cameraList.appendChild(cameraItem);
+}
+
+
+// ========================================
+// ETHERNET CANLI GÖRÜNTÜ
+// ========================================
+
+function startEthernetPlayer() {
+
+    // mpegts.js destekleniyor mu?
+    if (!mpegts.isSupported()) {
+
+        console.error(
+            "mpegts.js bu tarayıcıda desteklenmiyor."
+        );
+
+        rtspStatus.textContent =
+            "Tarayıcı MPEG-TS oynatmayı desteklemiyor.";
+
+        return;
+    }
+
+
+    // Eski player varsa kapat
+    stopEthernetPlayer();
+
+
+    currentMode = "ethernet";
+
+
+    video.srcObject = null;
+
+    video.style.display = "block";
+
+    noCamera.style.display = "none";
+
+
+    // MPEG-TS player oluştur
+    currentPlayer = mpegts.createPlayer({
+
+        type: "mpegts",
+
+        isLive: true,
+
+        url: "/api/stream"
+
+    });
+
+
+    // Video elementine bağla
+    currentPlayer.attachMediaElement(video);
+
+
+    // Stream'i yükle
+    currentPlayer.load();
+
+
+    // Oynat
+    currentPlayer.play().catch(error => {
+
+        console.error(
+            "Video oynatma hatası:",
+            error
+        );
+
+    });
+
+
+    console.log("Ethernet canlı görüntü başlatıldı.");
+}
+
+
+// ========================================
+// ETHERNET PLAYER KAPAT
+// ========================================
+
+function stopEthernetPlayer() {
+
+    if (currentPlayer) {
+
+        try {
+
+            currentPlayer.pause();
+
+            currentPlayer.unload();
+
+            currentPlayer.detachMediaElement();
+
+            currentPlayer.destroy();
+
+        } catch (error) {
+
+            console.error(
+                "Player kapatılırken hata:",
+                error
+            );
+        }
+
+
+        currentPlayer = null;
+    }
+}
+
+
+// ========================================
+// İLK KAMERALARI BUL
+// ========================================
+
 async function initializeCameras() {
 
     try {
 
-        // Kamera izni al
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: false
-        });
+        const stream =
+            await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: false
+            });
 
 
-        // Bu stream'i hemen kapatıyoruz.
-        // Sadece kamera isimlerini görebilmek için izin gerekiyor.
         stream.getTracks().forEach(track => {
             track.stop();
         });
 
 
-        // Kameraları listele
         await listCameras();
 
     } catch (error) {
 
-        console.error("Kamera erişimi reddedildi:", error);
-
+        console.error(
+            "Kamera erişimi reddedildi:",
+            error
+        );
     }
-
 }
 
 
-// Kamera takılıp çıkarıldığında otomatik güncelle
-navigator.mediaDevices.addEventListener("devicechange", () => {
+// ========================================
+// KAMERA TAKILIP ÇIKARILINCA
+// ========================================
 
-    console.log("Kamera cihazlarında değişiklik oldu.");
+navigator.mediaDevices.addEventListener(
+    "devicechange",
+    () => {
 
-    listCameras();
+        console.log(
+            "Kamera cihazlarında değişiklik oldu."
+        );
 
-});
+
+        if (currentMode === "usb") {
+            listCameras();
+        }
+
+    }
+);
 
 
-// Uygulamayı başlat
+// ========================================
+// BAŞLANGIÇ
+// ========================================
+
+// Başlangıçta Ethernet alanını gizle
+ethernetSection.style.display = "none";
+
+
+// USB kameraları başlat
 initializeCameras();
+
+disconnectButton.addEventListener("click", async () => {
+
+    // Tarayıcıdaki Ethernet görüntüsünü durdur
+    stopEthernetPlayer();
+
+    try {
+        await fetch("/api/disconnect", {
+            method: "POST"
+        });
+
+        // Arayüzü temizle
+        document.getElementById("rtspStatus").textContent =
+            "Kamera bağlantısı kesildi.";
+
+        document.getElementById("selectedCamera").textContent =
+            "Kamera seçilmedi";
+
+        document.getElementById("connectionStatus").textContent =
+            "Bekliyor";
+
+        document.getElementById("cameraName").textContent =
+            "-";
+
+        document.getElementById("lastUpdate").textContent =
+            "-";
+
+        // Ethernet kamera kartını kaldır
+        cameraList.innerHTML = "";
+
+        cameraCount.textContent = "0";
+
+        noCamera.style.display = "flex";
+
+    } catch (error) {
+
+        console.error("Bağlantı kesme hatası:", error);
+
+        document.getElementById("rtspStatus").textContent =
+            "Bağlantı kesilemedi.";
+    }
+});

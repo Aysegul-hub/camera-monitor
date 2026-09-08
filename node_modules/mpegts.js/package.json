@@ -1,0 +1,44 @@
+{
+  "name": "mpegts.js",
+  "version": "1.8.2",
+  "description": "HTML5 MPEG2-TS Stream Player",
+  "main": "./dist/mpegts.js",
+  "types": "./d.ts/mpegts.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xqq/mpegts.js"
+  },
+  "keywords": [
+    "html5",
+    "flv",
+    "mpegts",
+    "m2ts",
+    "mse",
+    "arib",
+    "dvb"
+  ],
+  "scripts": {
+    "build": "webpack --mode=production --progress",
+    "build:debug": "webpack --mode=development --progress",
+    "watch": "webpack --mode=development --progress --watch",
+    "serve": "webpack serve --mode=development --progress"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "dependencies": {
+    "es6-promise": "^4.2.8",
+    "events": "^3.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "source-map-loader": "^5.0.0",
+    "ts-loader": "^9.6.2",
+    "typescript": "^5.9.3",
+    "webpack": "^5.109.2",
+    "webpack-cli": "^7.2.2",
+    "webpack-dev-server": "^6.0.0"
+  },
+  "author": "zheng qian <xqq@xqq.im>",
+  "license": "Apache-2.0"
+}

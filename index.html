@@ -8,6 +8,9 @@
     <title>Camera Monitor</title>
 
     <link rel="stylesheet" href="style.css">
+
+    <!-- MPEG-TS görüntüsünü tarayıcıda oynatmak için -->
+    <script src="https://cdn.jsdelivr.net/npm/mpegts.js@latest/dist/mpegts.min.js"></script>
 </head>
 
 <body>
@@ -31,14 +34,64 @@
         <!-- Ana içerik -->
         <main class="main-content">
 
-            <!-- Sol kamera listesi -->
+            <!-- Sol kamera paneli -->
             <aside class="camera-panel">
 
-                <div class="panel-title">
-                    <h2>Bağlı Kameralar</h2>
-                    <span id="cameraCount">0</span>
+                <!-- Kamera bağlantı türleri -->
+                <div class="connection-buttons">
+
+                    <button id="usbButton" class="connection-button active">
+                        🔌 USB
+                    </button>
+
+                    <button id="ethernetButton" class="connection-button">
+                        🌐 Ethernet
+                    </button>
+
                 </div>
 
+
+                <!-- Ethernet RTSP alanı -->
+                <div id="ethernetSection" class="ethernet-section">
+
+                    <h3>Ethernet Kamera</h3>
+
+                    <label for="rtspUrl">RTSP URL</label>
+
+                    <input
+                        type="text"
+                        id="rtspUrl"
+                        placeholder="rtsp://192.168.1.100:554/..."
+                    >
+
+                    <button id="connectButton" class="connect-button">
+                        🔗 Kameraya Bağlan
+                    </button>
+
+                    <button id="disconnectButton" class="disconnect-button">
+                        ⛔ Bağlantıyı Kes
+                    </button>
+                    
+                    <p id="rtspStatus" class="rtsp-status">
+                        RTSP adresini girin.
+                    </p>
+
+                </div>
+
+
+                <!-- Panel başlığı -->
+                <div class="panel-title">
+
+                    <h2 id="cameraPanelTitle">
+                        Bağlı USB Kameralar
+                    </h2>
+
+                    <span id="cameraCount">0</span>
+
+                </div>
+
+
+                <!-- Kamera listesi -->
                 <div id="cameraList" class="camera-list">
                     <!-- Kameralar JavaScript ile buraya gelecek -->
                 </div>
@@ -50,15 +103,21 @@
             <section class="video-panel">
 
                 <div class="video-header">
+
                     <div>
                         <h2>Canlı Görüntü</h2>
-                        <p id="selectedCamera">Kamera seçilmedi</p>
+
+                        <p id="selectedCamera">
+                            Kamera seçilmedi
+                        </p>
                     </div>
 
                     <span class="live-badge">
                         ● CANLI
                     </span>
+
                 </div>
+
 
                 <div class="video-container">
 
@@ -69,28 +128,55 @@
                     </video>
 
                     <div id="noCamera" class="no-camera">
-                        <div class="camera-icon">📹</div>
+
+                        <div class="camera-icon">
+                            📹
+                        </div>
+
                         <h3>Kamera seçilmedi</h3>
-                        <p>Görüntüyü görmek için soldan bir kamera seçin.</p>
+
+                        <p>
+                            Görüntüyü görmek için soldan bir kamera seçin.
+                        </p>
+
                     </div>
 
                 </div>
 
+
+                <!-- Kamera bilgileri -->
                 <div class="video-info">
 
                     <div>
-                        <span class="info-label">Durum</span>
-                        <strong id="connectionStatus">Bekliyor</strong>
+                        <span class="info-label">
+                            Durum
+                        </span>
+
+                        <strong id="connectionStatus">
+                            Bekliyor
+                        </strong>
                     </div>
 
-                    <div>
-                        <span class="info-label">Kamera</span>
-                        <strong id="cameraName">-</strong>
-                    </div>
 
                     <div>
-                        <span class="info-label">Son Güncelleme</span>
-                        <strong id="lastUpdate">-</strong>
+                        <span class="info-label">
+                            Kamera
+                        </span>
+
+                        <strong id="cameraName">
+                            -
+                        </strong>
+                    </div>
+
+
+                    <div>
+                        <span class="info-label">
+                            Son Güncelleme
+                        </span>
+
+                        <strong id="lastUpdate">
+                            -
+                        </strong>
                     </div>
 
                 </div>

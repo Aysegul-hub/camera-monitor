@@ -1,0 +1,13 @@
+{
+  "name": "camera-monitor",
+  "version": "1.0.0",
+  "description": "Camera Monitor",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "mpegts.js": "^1.8.2"
+  }
+}
