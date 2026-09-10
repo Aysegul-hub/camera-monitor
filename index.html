@@ -106,6 +106,48 @@
 
     </div>
 
+    <div class="image-settings">
+
+    <label for="brightness">Parlaklık</label>
+
+    <input
+        type="range"
+        id="brightness"
+        min="0"
+        max="100"
+        value="50"
+    >
+
+    <label for="contrast">Kontrast</label>
+
+    <input
+        type="range"
+        id="contrast"
+        min="0"
+        max="100"
+        value="50"
+    >
+
+</div>
+
+<div class="camera-control-section">
+    <h3>👤 İNSAN ALGILAMA</h3>
+
+    <button
+        id="humanDetectionButton"
+        class="control-button"
+        type="button"
+    >
+        ▶ İnsan Algılamayı Başlat
+    </button>
+
+    <div
+        id="humanDetectionStatus"
+        class="control-status"
+    >
+        İnsan algılama hazır.
+    </div>
+</div>
 
     <!-- Görüntü döndürme -->
     <div class="control-group">
@@ -131,6 +173,86 @@
     </div>
 
 </div>
+
+<div class="resolution-control">
+    <div class="control-label">ÇÖZÜNÜRLÜK</div>
+
+    <select id="resolutionSelect" class="resolution-select">
+        <option value="1920x1080">1920 × 1080</option>
+        <option value="1280x720">1280 × 720</option>
+    </select>
+
+    <button
+        id="applyResolutionButton"
+        class="control-button"
+        type="button"
+    >
+        ✓ Çözünürlüğü Uygula
+    </button>
+
+    <div id="resolutionStatus" class="control-status">
+        Mevcut çözünürlük kontrol ediliyor...
+    </div>
+</div>
+
+
+
+<!-- KAMERA TARİH / SAAT -->
+<div class="camera-control-section camera-time-section">
+
+    <h3>🕐 KAMERA TARİH / SAAT</h3>
+
+    <div class="time-info">
+
+        <div class="time-row">
+            <span>Tarih</span>
+            <strong id="cameraDate">-</strong>
+        </div>
+
+        <div class="time-row">
+            <span>Saat</span>
+            <strong id="cameraTime">-</strong>
+        </div>
+
+        <div class="time-row">
+            <span>Saat Dilimi</span>
+            <strong id="cameraTimezone">-</strong>
+        </div>
+
+        <div class="time-row">
+            <span>Zaman Modu</span>
+            <strong id="cameraTimeMode">-</strong>
+        </div>
+
+    </div>
+
+    <button
+        id="syncCameraTimeButton"
+        class="control-button"
+        type="button">
+        🔄 Saati Senkronize Et
+    </button>
+
+    <div id="timeSyncStatus" class="control-status">
+        Kamera saati kontrol ediliyor...
+    </div>
+
+</div>
+
+<div class="camera-control-section human-detection-section">
+    <h3>👤 İNSAN ALGILAMA</h3>
+
+    <div id="humanDetectionStatus" class="human-detection-status">
+        ⚪ İnsan algılama bekleniyor...
+    </div>
+
+    <div id="humanDetectionTime" class="human-detection-time">
+        Son algılama: -
+    </div>
+</div>
+
+
+
 
                     <p id="rtspStatus" class="rtsp-status">
                         RTSP adresini girin.
@@ -191,6 +313,8 @@
                         playsinline>
                     </video>
 
+                    <div id="detectionOverlay"></div>
+
                     <div id="noCamera" class="no-camera">
 
                         <div class="camera-icon">
@@ -243,6 +367,13 @@
                         </strong>
                     </div>
 
+                    <div class="camera-events">
+                        <span class="info-label">Kamera Olayları</span>,
+
+                        <div id = "cameraEventLog">Henüz hareket algılanmadı.
+                        </div>
+                    </div>
+
                 </div>
 
             </section>
@@ -251,7 +382,8 @@
 
     </div>
 
-
+    <script src ="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
     <script src="script.js"></script>
 
 </body>
