@@ -64,6 +64,15 @@
                         placeholder="rtsp://192.168.1.100:554/..."
                     >
 
+                    <div class="stream-selector">
+                        <label for="streamType">Görüntü Akışı</label>
+
+                        <select id="streamType">
+                            <option value="main">Ana Akış • Main Stream</option>
+                            <option value="sub">Alt Akış • Sub Stream</option>
+                        </select>
+                    </div>
+
                     <button id="connectButton" class="connect-button">
                         🔗 Kameraya Bağlan
                     </button>
@@ -72,176 +81,185 @@
                         ⛔ Bağlantıyı Kes
                     </button>
 
+
                     <!-- Kamera kontrolleri -->
-<div class="camera-controls">
+                    <div class="camera-controls">
 
-    <h3>⚙️ Kamera Kontrolleri</h3>
+                        <h3>⚙️ Kamera Kontrolleri</h3>
 
-    <!-- Gece / Gündüz -->
-    <div class="control-group">
+                        <!-- Gece / Gündüz -->
+                        <div class="control-group">
 
-        <label>🌙 Gece Görüşü</label>
+                            <label>🌙 Gece Görüşü</label>
 
-        <div class="control-buttons">
+                            <div class="control-buttons">
 
-            <button
-                id="dayModeButton"
-                class="control-button">
-                ☀️ Gündüz
-            </button>
+                                <button
+                                    id="dayModeButton"
+                                    class="control-button">
+                                    ☀️ Gündüz
+                                </button>
 
-            <button
-                id="autoModeButton"
-                class="control-button active">
-                🔄 Otomatik
-            </button>
+                                <button
+                                    id="autoModeButton"
+                                    class="control-button active">
+                                    🔄 Otomatik
+                                </button>
 
-            <button
-                id="nightModeButton"
-                class="control-button">
-                🌙 Gece
-            </button>
+                                <button
+                                    id="nightModeButton"
+                                    class="control-button">
+                                    🌙 Gece
+                                </button>
 
-        </div>
+                            </div>
 
-    </div>
-
-    <div class="image-settings">
-
-    <label for="brightness">Parlaklık</label>
-
-    <input
-        type="range"
-        id="brightness"
-        min="0"
-        max="100"
-        value="50"
-    >
-
-    <label for="contrast">Kontrast</label>
-
-    <input
-        type="range"
-        id="contrast"
-        min="0"
-        max="100"
-        value="50"
-    >
-
-</div>
-
-<div class="camera-control-section">
-    <h3>👤 İNSAN ALGILAMA</h3>
-
-    <button
-        id="humanDetectionButton"
-        class="control-button"
-        type="button"
-    >
-        ▶ İnsan Algılamayı Başlat
-    </button>
-
-    <div
-        id="humanDetectionStatus"
-        class="control-status"
-    >
-        İnsan algılama hazır.
-    </div>
-
-    <div id="humanDetectionTime" class="control-status">
-        Son algılama : -
-    </div>
-</div>
-
-    <!-- Görüntü döndürme -->
-    <div class="control-group">
-
-        <label>🔄 Görüntü</label>
-
-        <div class="control-buttons">
-
-            <button
-                id="normalImageButton"
-                class="control-button active">
-                Normal
-            </button>
-
-            <button
-                id="rotateImageButton"
-                class="control-button">
-                180° Döndür
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-<div class="resolution-control">
-    <div class="control-label">ÇÖZÜNÜRLÜK</div>
-
-    <select id="resolutionSelect" class="resolution-select">
-        <option value="1920x1080">1920 × 1080</option>
-        <option value="1280x720">1280 × 720</option>
-    </select>
-
-    <button
-        id="applyResolutionButton"
-        class="control-button"
-        type="button"
-    >
-        ✓ Çözünürlüğü Uygula
-    </button>
-
-    <div id="resolutionStatus" class="control-status">
-        Mevcut çözünürlük kontrol ediliyor...
-    </div>
-</div>
+                        </div>
 
 
+                        <div class="image-settings">
 
-<!-- KAMERA TARİH / SAAT -->
-<div class="camera-control-section camera-time-section">
+                            <label for="brightness">Parlaklık</label>
 
-    <h3>🕐 KAMERA TARİH / SAAT</h3>
+                            <input
+                                type="range"
+                                id="brightness"
+                                min="0"
+                                max="100"
+                                value="50"
+                            >
 
-    <div class="time-info">
+                            <label for="contrast">Kontrast</label>
 
-        <div class="time-row">
-            <span>Tarih</span>
-            <strong id="cameraDate">-</strong>
-        </div>
+                            <input
+                                type="range"
+                                id="contrast"
+                                min="0"
+                                max="100"
+                                value="50"
+                            >
 
-        <div class="time-row">
-            <span>Saat</span>
-            <strong id="cameraTime">-</strong>
-        </div>
+                        </div>
 
-        <div class="time-row">
-            <span>Saat Dilimi</span>
-            <strong id="cameraTimezone">-</strong>
-        </div>
 
-        <div class="time-row">
-            <span>Zaman Modu</span>
-            <strong id="cameraTimeMode">-</strong>
-        </div>
+                        <div class="camera-control-section">
 
-    </div>
+                            <h3>👤 İNSAN ALGILAMA</h3>
 
-    <button
-        id="syncCameraTimeButton"
-        class="control-button"
-        type="button">
-        🔄 Saati Senkronize Et
-    </button>
+                            <button
+                                id="humanDetectionButton"
+                                class="control-button"
+                                type="button"
+                            >
+                                ▶ İnsan Algılamayı Başlat
+                            </button>
 
-    <div id="timeSyncStatus" class="control-status">
-        Kamera saati kontrol ediliyor...
-    </div>
+                            <div
+                                id="humanDetectionStatus"
+                                class="control-status"
+                            >
+                                İnsan algılama hazır.
+                            </div>
 
-</div>
+                            <div id="humanDetectionTime" class="control-status">
+                                Son algılama : -
+                            </div>
+
+                        </div>
+
+
+                        <!-- Görüntü döndürme -->
+                        <div class="control-group">
+
+                            <label>🔄 Görüntü</label>
+
+                            <div class="control-buttons">
+
+                                <button
+                                    id="normalImageButton"
+                                    class="control-button active">
+                                    Normal
+                                </button>
+
+                                <button
+                                    id="rotateImageButton"
+                                    class="control-button">
+                                    180° Döndür
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="resolution-control">
+
+                        <div class="control-label">ÇÖZÜNÜRLÜK</div>
+
+                        <select id="resolutionSelect" class="resolution-select">
+                            <option value="1920x1080">1920 × 1080</option>
+                            <option value="1280x720">1280 × 720</option>
+                        </select>
+
+                        <button
+                            id="applyResolutionButton"
+                            class="control-button"
+                            type="button"
+                        >
+                            ✓ Çözünürlüğü Uygula
+                        </button>
+
+                        <div id="resolutionStatus" class="control-status">
+                            Mevcut çözünürlük kontrol ediliyor...
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- KAMERA TARİH / SAAT -->
+                    <div class="camera-control-section camera-time-section">
+
+                        <h3>🕐 KAMERA TARİH / SAAT</h3>
+
+                        <div class="time-info">
+
+                            <div class="time-row">
+                                <span>Tarih</span>
+                                <strong id="cameraDate">-</strong>
+                            </div>
+
+                            <div class="time-row">
+                                <span>Saat</span>
+                                <strong id="cameraTime">-</strong>
+                            </div>
+
+                            <div class="time-row">
+                                <span>Saat Dilimi</span>
+                                <strong id="cameraTimezone">-</strong>
+                            </div>
+
+                            <div class="time-row">
+                                <span>Zaman Modu</span>
+                                <strong id="cameraTimeMode">-</strong>
+                            </div>
+
+                        </div>
+
+                        <button
+                            id="syncCameraTimeButton"
+                            class="control-button"
+                            type="button">
+                            🔄 Saati Senkronize Et
+                        </button>
+
+                        <div id="timeSyncStatus" class="control-status">
+                            Kamera saati kontrol ediliyor...
+                        </div>
+
+                    </div>
 
 
                     <p id="rtspStatus" class="rtsp-status">
@@ -282,7 +300,7 @@
                         <div id="latencyDisplay" class="latency-display">
                             Gecikme ölçülüyor...
                         </div>
-                        
+
                         <p id="selectedCamera">
                             Kamera seçilmedi
                         </p>
@@ -297,10 +315,20 @@
 
                 <div class="video-container">
 
+                    <!-- Ekranda gösterilen Ana/Main Stream -->
                     <video
                         id="video"
                         autoplay
                         playsinline>
+                    </video>
+
+                    <!-- İnsan algılama için kullanılan gizli Alt/Sub Stream -->
+                    <video
+                        id="detectionVideo"
+                        autoplay
+                        playsinline
+                        muted
+                        style="display: none;">
                     </video>
 
                     <div id="detectionOverlay"></div>
@@ -357,16 +385,15 @@
                         </strong>
                     </div>
 
+
                     <div class="camera-events">
                         <span class="info-label">Kamera Olayları</span>
 
                         <div id="cameraEventLog">
                             ⚪ Henüz hareket algılanmadı.
-                        
                         </div>
                     </div>
 
-                
                 </div>
 
             </section>
@@ -375,7 +402,8 @@
 
     </div>
 
-    <script src ="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
     <script src="script.js"></script>
 

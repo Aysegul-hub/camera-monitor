@@ -2,6 +2,8 @@ const cameraList = document.getElementById("cameraList");
 const cameraCount = document.getElementById("cameraCount");
 
 const video = document.getElementById("video");
+const detectionVideo = document.getElementById("detectionVideo");
+const streamType = document.getElementById("streamType");
 const noCamera = document.getElementById("noCamera");
 
 const selectedCamera = document.getElementById("selectedCamera");
@@ -22,6 +24,7 @@ const cameraPanelTitle = document.getElementById("cameraPanelTitle");
 
 let currentStream = null;
 let currentPlayer = null;
+let detectionPlayer = null;
 let currentMode = "usb";
 
 
@@ -155,20 +158,27 @@ async function selectCamera(camera, cameraItem) {
         noCamera.style.display = "none";
 
 
-        selectedCamera.textContent = camera.label || "USB Kamera";
+        selectedCamera.textContent =
+            camera.label || "USB Kamera";
 
-        cameraName.textContent = camera.label || "USB Kamera";
+        cameraName.textContent =
+            camera.label || "USB Kamera";
 
-        connectionStatus.textContent = "Bağlı";
+        connectionStatus.textContent =
+            "Bağlı";
 
         lastUpdate.textContent =
             new Date().toLocaleTimeString("tr-TR");
 
     } catch (error) {
 
-        console.error("USB kamera açılamadı:", error);
+        console.error(
+            "USB kamera açılamadı:",
+            error
+        );
 
-        connectionStatus.textContent = "Bağlantı Hatası";
+        connectionStatus.textContent =
+            "Bağlantı Hatası";
     }
 }
 
@@ -186,7 +196,8 @@ usbButton.addEventListener("click", () => {
 
     ethernetSection.style.display = "none";
 
-    cameraPanelTitle.textContent = "Bağlı USB Kameralar";
+    cameraPanelTitle.textContent =
+        "Bağlı USB Kameralar";
 
     stopEthernetPlayer();
 
@@ -196,11 +207,13 @@ usbButton.addEventListener("click", () => {
 
     noCamera.style.display = "flex";
 
-    selectedCamera.textContent = "Kamera seçilmedi";
+    selectedCamera.textContent =
+        "Kamera seçilmedi";
 
     cameraName.textContent = "-";
 
-    connectionStatus.textContent = "Bekliyor";
+    connectionStatus.textContent =
+        "Bekliyor";
 
     listCameras();
 });
@@ -215,7 +228,8 @@ ethernetButton.addEventListener("click", () => {
 
     ethernetSection.style.display = "block";
 
-    cameraPanelTitle.textContent = "Ethernet Kameralar";
+    cameraPanelTitle.textContent =
+        "Ethernet Kameralar";
 
     stopUSBStream();
 
@@ -232,12 +246,13 @@ ethernetButton.addEventListener("click", () => {
 
     noCamera.style.display = "flex";
 
-    selectedCamera.textContent = "Ethernet kamera seçilmedi";
+    selectedCamera.textContent =
+        "Ethernet kamera seçilmedi";
 
     cameraName.textContent = "-";
 
-    connectionStatus.textContent = "Bekliyor";
-
+    connectionStatus.textContent =
+        "Bekliyor";
 });
 
 
@@ -264,7 +279,10 @@ function stopUSBStream() {
 // ETHERNET / RTSP BAĞLANTISI
 // ========================================
 
-connectButton.addEventListener("click", connectEthernetCamera);
+connectButton.addEventListener(
+    "click",
+    connectEthernetCamera
+);
 
 
 async function connectEthernetCamera() {
@@ -272,7 +290,6 @@ async function connectEthernetCamera() {
     const url = rtspUrl.value.trim();
 
 
-    // RTSP adresi boş mu?
     if (!url) {
 
         rtspStatus.textContent =
@@ -282,7 +299,6 @@ async function connectEthernetCamera() {
     }
 
 
-    // RTSP adresi mi?
     if (!url.startsWith("rtsp://")) {
 
         rtspStatus.textContent =
@@ -292,12 +308,15 @@ async function connectEthernetCamera() {
     }
 
 
-    console.log("Ethernet kamera bağlanıyor...");
+    console.log(
+        "Ethernet kamera bağlanıyor..."
+    );
 
 
     connectButton.disabled = true;
 
-    connectButton.textContent = "⏳ Bağlanıyor...";
+    connectButton.textContent =
+        "⏳ Bağlanıyor...";
 
     rtspStatus.textContent =
         "RTSP kameraya bağlanılıyor...";
@@ -305,46 +324,94 @@ async function connectEthernetCamera() {
 
     try {
 
-        // USB akışını kapat
         stopUSBStream();
 
-
-        // Eski Ethernet player varsa kapat
         stopEthernetPlayer();
 
 
-        // RTSP adresini Node.js'e gönder
-        const response = await fetch("http://localhost:3000/api/connect", {
-
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                rtspUrl: url
-            })
-
-        });
+        let selectedRtspUrl = url;
 
 
-        const data = await response.json();
+        // Hikvision Main / Sub Stream seçimi
+        if (
+            url.includes(
+                "/Streaming/Channels/"
+            )
+        ) {
 
+            if (
+                streamType &&
+                streamType.value === "sub"
+            ) {
 
-        if (!response.ok) {
-            throw new Error(data.error || "Bağlantı başarısız.");
+                selectedRtspUrl =
+                    url.replace(
+                        /\/Streaming\/Channels\/\d+/i,
+                        "/Streaming/Channels/102"
+                    );
+
+            } else {
+
+                selectedRtspUrl =
+                    url.replace(
+                        /\/Streaming\/Channels\/\d+/i,
+                        "/Streaming/Channels/101"
+                    );
+            }
         }
 
 
-        console.log("RTSP adresi backend'e gönderildi.");
+        // İnsan algılama için her zaman Sub Stream
+        const detectionRtspUrl =
+            url.includes(
+                "/Streaming/Channels/"
+            )
+                ? url.replace(
+                    /\/Streaming\/Channels\/\d+/i,
+                    "/Streaming/Channels/102"
+                )
+                : url;
 
 
-        // Sol listeye Ethernet kamerayı ekle
+        // RTSP adreslerini backend'e gönder
+        const response = await fetch(
+            "http://localhost:3000/api/connect",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    rtspUrl: selectedRtspUrl,
+                    detectionRtspUrl: detectionRtspUrl
+                })
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.error ||
+                "Bağlantı başarısız."
+            );
+        }
+
+
+        console.log(
+            "RTSP adresleri backend'e gönderildi."
+        );
+
+
         addEthernetCamera();
 
 
-        // FFmpeg stream'ini oynat
         startEthernetPlayer();
 
 
@@ -361,12 +428,17 @@ async function connectEthernetCamera() {
             "Ethernet Kamera";
 
         lastUpdate.textContent =
-            new Date().toLocaleTimeString("tr-TR");
+            new Date().toLocaleTimeString(
+                "tr-TR"
+            );
 
 
     } catch (error) {
 
-        console.error("Ethernet kamera hatası:", error);
+        console.error(
+            "Ethernet kamera hatası:",
+            error
+        );
 
         rtspStatus.textContent =
             "Bağlantı hatası.";
@@ -395,9 +467,11 @@ function addEthernetCamera() {
     cameraCount.textContent = "1";
 
 
-    const cameraItem = document.createElement("div");
+    const cameraItem =
+        document.createElement("div");
 
-    cameraItem.className = "camera-item selected";
+    cameraItem.className =
+        "camera-item selected";
 
 
     cameraItem.innerHTML = `
@@ -416,14 +490,19 @@ function addEthernetCamera() {
     `;
 
 
-    cameraItem.addEventListener("click", () => {
+    cameraItem.addEventListener(
+        "click",
+        () => {
 
-        startEthernetPlayer();
+            startEthernetPlayer();
 
-    });
+        }
+    );
 
 
-    cameraList.appendChild(cameraItem);
+    cameraList.appendChild(
+        cameraItem
+    );
 }
 
 
@@ -431,12 +510,11 @@ function addEthernetCamera() {
 // ETHERNET CANLI GÖRÜNTÜ
 // ========================================
 
-
 function startEthernetPlayer() {
 
-    latencyValues = [] ;
+    latencyValues = [];
 
-    // mpegts.js destekleniyor mu?
+
     if (!mpegts.isSupported()) {
 
         console.error(
@@ -450,7 +528,6 @@ function startEthernetPlayer() {
     }
 
 
-    // Eski player varsa kapat
     stopEthernetPlayer();
 
 
@@ -464,43 +541,181 @@ function startEthernetPlayer() {
     noCamera.style.display = "none";
 
 
-    // MPEG-TS player oluştur
-    currentPlayer = mpegts.createPlayer({
+    currentPlayer =
+        mpegts.createPlayer(
+            {
+                type: "mpegts",
 
-        type: "mpegts",
+                isLive: true,
 
-        isLive: true,
+                url:
+                    "http://localhost:3000/api/stream"
+            },
 
-        url: "http://localhost:3000/api/stream"
+            {
+                enableStashBuffer: false,
 
-    }, {
-        enableStashBuffer:false,
-        liveBufferLatencyChasing: true,
-        liveBufferLatencyMaxLatency: 1.5,
-        liveBufferLatencyMinRemain: 0.5
-    });
+                liveBufferLatencyChasing:
+                    true,
+
+                liveBufferLatencyMaxLatency:
+                    1.5,
+
+                liveBufferLatencyMinRemain:
+                    0.5
+            }
+        );
 
 
-    // Video elementine bağla
-    currentPlayer.attachMediaElement(video);
+    currentPlayer.attachMediaElement(
+        video
+    );
 
 
-    // Stream'i yükle
     currentPlayer.load();
 
 
-    // Oynat
-    currentPlayer.play().catch(error => {
+    currentPlayer.play().catch(
+        error => {
+
+            console.error(
+                "Video oynatma hatası:",
+                error
+            );
+
+        }
+    );
+
+
+    // İnsan algılama zaten açıksa
+    // Sub Stream'i tekrar başlat
+    if (detectionRunning) {
+
+        startDetectionPlayer();
+    }
+
+
+    console.log(
+        "Ethernet canlı görüntü başlatıldı."
+    );
+}
+
+
+// ========================================
+// İNSAN ALGILAMA SUB STREAM PLAYER
+// ========================================
+
+function startDetectionPlayer() {
+
+    if (
+        currentMode !== "ethernet"
+    ) {
+
+        return true;
+    }
+
+
+    if (!detectionVideo) {
 
         console.error(
-            "Video oynatma hatası:",
-            error
+            "detectionVideo bulunamadı."
         );
 
-    });
+        return false;
+    }
 
 
-    console.log("Ethernet canlı görüntü başlatıldı.");
+    if (
+        !mpegts.isSupported()
+    ) {
+
+        console.error(
+            "mpegts.js desteklenmiyor."
+        );
+
+        return false;
+    }
+
+
+    // Zaten çalışıyorsa tekrar oluşturma
+    if (detectionPlayer) {
+
+        return true;
+    }
+
+
+    detectionVideo.muted = true;
+
+    detectionVideo.playsInline = true;
+
+    detectionVideo.style.display =
+        "block";
+
+    detectionVideo.style.width =
+        "1px";
+
+    detectionVideo.style.height =
+        "1px";
+
+    detectionVideo.style.opacity =
+        "0";
+
+    detectionVideo.style.pointerEvents =
+        "none";
+
+
+    detectionPlayer =
+        mpegts.createPlayer(
+            {
+                type: "mpegts",
+
+                isLive: true,
+
+                url:
+                    "http://localhost:3000/api/detection-stream"
+            },
+
+            {
+                enableStashBuffer: false,
+
+                liveBufferLatencyChasing:
+                    true,
+
+                liveBufferLatencyMaxLatency:
+                    1.5,
+
+                liveBufferLatencyMinRemain:
+                    0.5
+            }
+        );
+
+
+    detectionPlayer.attachMediaElement(
+        detectionVideo
+    );
+
+
+    detectionPlayer.load();
+
+
+    detectionPlayer.play().catch(
+        error => {
+
+            console.error(
+                "Sub Stream oynatma hatası:",
+                error
+            );
+
+        }
+    );
+
+
+    console.log(
+        "İnsan algılama için Sub Stream başlatıldı."
+    );
+
+
+    return true;
 }
 
 
@@ -530,8 +745,46 @@ function stopEthernetPlayer() {
             );
         }
 
-
         currentPlayer = null;
+    }
+
+
+    if (detectionPlayer) {
+
+        try {
+
+            detectionPlayer.pause();
+
+            detectionPlayer.unload();
+
+            detectionPlayer.detachMediaElement();
+
+            detectionPlayer.destroy();
+
+        } catch (error) {
+
+            console.error(
+                "Sub Stream player kapatılırken hata:",
+                error
+            );
+        }
+
+        detectionPlayer = null;
+    }
+
+
+    if (detectionVideo) {
+
+        detectionVideo.pause();
+
+        detectionVideo.removeAttribute(
+            "src"
+        );
+
+        detectionVideo.load();
+
+        detectionVideo.style.display =
+            "none";
     }
 }
 
@@ -545,15 +798,21 @@ async function initializeCameras() {
     try {
 
         const stream =
-            await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: false
-            });
+            await navigator.mediaDevices.getUserMedia(
+                {
+                    video: true,
+                    audio: false
+                }
+            );
 
 
-        stream.getTracks().forEach(track => {
-            track.stop();
-        });
+        stream.getTracks().forEach(
+            track => {
+
+                track.stop();
+
+            }
+        );
 
 
         await listCameras();
@@ -581,7 +840,10 @@ navigator.mediaDevices.addEventListener(
         );
 
 
-        if (currentMode === "usb") {
+        if (
+            currentMode === "usb"
+        ) {
+
             listCameras();
         }
 
@@ -593,54 +855,102 @@ navigator.mediaDevices.addEventListener(
 // BAŞLANGIÇ
 // ========================================
 
-// Başlangıçta Ethernet alanını gizle
-ethernetSection.style.display = "none";
+ethernetSection.style.display =
+    "none";
 
 
-// USB kameraları başlat
 initializeCameras();
 
-disconnectButton.addEventListener("click", async () => {
 
-    // Tarayıcıdaki Ethernet görüntüsünü durdur
-    stopEthernetPlayer();
+disconnectButton.addEventListener(
+    "click",
+    async () => {
 
-    try {
-        await fetch("http://localhost:3000/api/disconnect", {
-            method: "POST"
-        });
+        stopEthernetPlayer();
 
-        // Arayüzü temizle
-        document.getElementById("rtspStatus").textContent =
-            "Kamera bağlantısı kesildi.";
 
-        document.getElementById("selectedCamera").textContent =
-            "Kamera seçilmedi";
+        detectionRunning = false;
 
-        document.getElementById("connectionStatus").textContent =
-            "Bekliyor";
+        detectionBusy = false;
 
-        document.getElementById("cameraName").textContent =
-            "-";
 
-        document.getElementById("lastUpdate").textContent =
-            "-";
+        if (
+            humanDetectionButton
+        ) {
 
-        // Ethernet kamera kartını kaldır
-        cameraList.innerHTML = "";
+            humanDetectionButton.textContent =
+                "▶ İnsan Algılamayı Başlat";
+        }
 
-        cameraCount.textContent = "0";
 
-        noCamera.style.display = "flex";
+        if (
+            humanDetectionStatus
+        ) {
 
-    } catch (error) {
+            humanDetectionStatus.textContent =
+                "İnsan algılama hazır.";
+        }
 
-        console.error("Bağlantı kesme hatası:", error);
 
-        document.getElementById("rtspStatus").textContent =
-            "Bağlantı kesilemedi.";
+        if (
+            humanDetectionTime
+        ) {
+
+            humanDetectionTime.textContent =
+                "Son algılama: -";
+        }
+
+
+        try {
+
+            await fetch(
+                "http://localhost:3000/api/disconnect",
+                {
+                    method: "POST"
+                }
+            );
+
+
+            rtspStatus.textContent =
+                "Kamera bağlantısı kesildi.";
+
+            selectedCamera.textContent =
+                "Kamera seçilmedi";
+
+            connectionStatus.textContent =
+                "Bekliyor";
+
+            cameraName.textContent =
+                "-";
+
+            lastUpdate.textContent =
+                "-";
+
+
+            cameraList.innerHTML =
+                "";
+
+            cameraCount.textContent =
+                "0";
+
+            noCamera.style.display =
+                "flex";
+
+
+        } catch (error) {
+
+            console.error(
+                "Bağlantı kesme hatası:",
+                error
+            );
+
+            rtspStatus.textContent =
+                "Bağlantı kesilemedi.";
+        }
+
     }
-});
+);
+
 
 // ========================================
 // CANLI GECİKME ÖLÇÜMÜ
@@ -648,10 +958,14 @@ disconnectButton.addEventListener("click", async () => {
 
 let latencyValues = [];
 
+
 function updateLatency() {
 
     const latencyDisplay =
-        document.getElementById("latencyDisplay");
+        document.getElementById(
+            "latencyDisplay"
+        );
+
 
     if (
         currentMode !== "ethernet" ||
@@ -659,32 +973,51 @@ function updateLatency() {
         video.readyState < 2 ||
         video.buffered.length === 0
     ) {
+
         return;
     }
 
+
     const liveEdge =
-        video.buffered.end(video.buffered.length - 1);
+        video.buffered.end(
+            video.buffered.length - 1
+        );
+
 
     const currentTime =
         video.currentTime;
 
+
     const latency =
         liveEdge - currentTime;
 
-    // Son 8 ölçümü sakla
-    latencyValues.push(latency);
 
-    if (latencyValues.length > 8) {
+    latencyValues.push(
+        latency
+    );
+
+
+    if (
+        latencyValues.length > 8
+    ) {
+
         latencyValues.shift();
     }
 
-    // Ortalama gecikme
+
     const averageLatency =
-        latencyValues.reduce((a, b) => a + b, 0) /
+        latencyValues.reduce(
+            (a, b) => a + b,
+            0
+        ) /
         latencyValues.length;
 
+
     const milliseconds =
-        Math.round(averageLatency * 1000);
+        Math.round(
+            averageLatency * 1000
+        );
+
 
     latencyDisplay.innerHTML = `
         <span class="latency-dot"></span>
@@ -694,124 +1027,238 @@ function updateLatency() {
 }
 
 
-// Her 500 ms'de bir ölç
-setInterval(updateLatency, 500);
+setInterval(
+    updateLatency,
+    500
+);
 
-// =========================
-// Hikvision Kamera Kontrolleri
-// =========================
 
-const dayModeButton = document.getElementById("dayModeButton");
-const autoModeButton = document.getElementById("autoModeButton");
-const nightModeButton = document.getElementById("nightModeButton");
+// ========================================
+// HIKVISION KAMERA KONTROLLERİ
+// ========================================
 
-const normalImageButton = document.getElementById("normalImageButton");
-const rotateImageButton = document.getElementById("rotateImageButton");
+const dayModeButton =
+    document.getElementById(
+        "dayModeButton"
+    );
+
+const autoModeButton =
+    document.getElementById(
+        "autoModeButton"
+    );
+
+const nightModeButton =
+    document.getElementById(
+        "nightModeButton"
+    );
+
+
+const normalImageButton =
+    document.getElementById(
+        "normalImageButton"
+    );
+
+const rotateImageButton =
+    document.getElementById(
+        "rotateImageButton"
+    );
 
 
 // Gece / gündüz modunu değiştir
-async function setNightMode(mode, button) {
+async function setNightMode(
+    mode,
+    button
+) {
 
     try {
 
-        const response = await fetch(
-            "http://localhost:3000/api/camera/night-mode",
-            {
-                method: "PUT",
+        const response =
+            await fetch(
+                "http://localhost:3000/api/camera/night-mode",
+                {
+                    method: "PUT",
 
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
 
-                body: JSON.stringify({
-                    mode: mode
-                })
-            }
-        );
+                    body: JSON.stringify({
+                        mode: mode
+                    })
+                }
+            );
+
 
         if (!response.ok) {
-            throw new Error("Kamera ayarı değiştirilemedi.");
+
+            throw new Error(
+                "Kamera ayarı değiştirilemedi."
+            );
         }
 
-        // Aktif butonu değiştir
+
         document
-            .querySelectorAll(".control-buttons .control-button")
+            .querySelectorAll(
+                ".control-buttons .control-button"
+            )
             .forEach(btn => {
-                btn.classList.remove("active");
+
+                btn.classList.remove(
+                    "active"
+                );
+
             });
 
-        button.classList.add("active");
 
-        console.log("Gece/Gündüz modu:", mode);
+        button.classList.add(
+            "active"
+        );
+
+
+        console.log(
+            "Gece/Gündüz modu:",
+            mode
+        );
+
 
     } catch (error) {
 
-        console.error("Kamera kontrol hatası:", error);
+        console.error(
+            "Kamera kontrol hatası:",
+            error
+        );
 
-        alert("Kamera ayarı değiştirilemedi.");
+        alert(
+            "Kamera ayarı değiştirilemedi."
+        );
     }
 }
 
 
-// Gündüz
-dayModeButton.addEventListener("click", () => {
-    setNightMode("day", dayModeButton);
-});
+dayModeButton.addEventListener(
+    "click",
+    () => {
+
+        setNightMode(
+            "day",
+            dayModeButton
+        );
+
+    }
+);
 
 
-// Otomatik
-autoModeButton.addEventListener("click", () => {
-    setNightMode("auto", autoModeButton);
-});
+autoModeButton.addEventListener(
+    "click",
+    () => {
+
+        setNightMode(
+            "auto",
+            autoModeButton
+        );
+
+    }
+);
 
 
-// Gece
-nightModeButton.addEventListener("click", () => {
-    setNightMode("night", nightModeButton);
-});
+nightModeButton.addEventListener(
+    "click",
+    () => {
+
+        setNightMode(
+            "night",
+            nightModeButton
+        );
+
+    }
+);
 
 
-// =========================
-// Görüntü döndürme
-// =========================
+// ========================================
+// GÖRÜNTÜ DÖNDÜRME
+// ========================================
 
 let imageRotated = false;
 
-normalImageButton.addEventListener("click", () => {
 
-    imageRotated = false;
+normalImageButton.addEventListener(
+    "click",
+    () => {
 
-    video.style.transform = "rotate(0deg)";
+        imageRotated = false;
 
-    normalImageButton.classList.add("active");
-    rotateImageButton.classList.remove("active");
-});
+        video.style.transform =
+            "rotate(0deg)";
+
+        normalImageButton.classList.add(
+            "active"
+        );
+
+        rotateImageButton.classList.remove(
+            "active"
+        );
+
+    }
+);
 
 
-rotateImageButton.addEventListener("click", () => {
+rotateImageButton.addEventListener(
+    "click",
+    () => {
 
-    imageRotated = true;
+        imageRotated = true;
 
-    video.style.transform = "rotate(180deg)";
+        video.style.transform =
+            "rotate(180deg)";
 
-    rotateImageButton.classList.add("active");
-    normalImageButton.classList.remove("active");
-});
+        rotateImageButton.classList.add(
+            "active"
+        );
 
-// =========================
-// Kamera Tarih / Saat
-// =========================
+        normalImageButton.classList.remove(
+            "active"
+        );
 
-const cameraDate = document.getElementById("cameraDate");
-const cameraTime = document.getElementById("cameraTime");
-const cameraTimezone = document.getElementById("cameraTimezone");
-const cameraTimeMode = document.getElementById("cameraTimeMode");
+    }
+);
+
+
+// ========================================
+// KAMERA TARİH / SAAT
+// ========================================
+
+const cameraDate =
+    document.getElementById(
+        "cameraDate"
+    );
+
+const cameraTime =
+    document.getElementById(
+        "cameraTime"
+    );
+
+const cameraTimezone =
+    document.getElementById(
+        "cameraTimezone"
+    );
+
+const cameraTimeMode =
+    document.getElementById(
+        "cameraTimeMode"
+    );
+
 
 const syncCameraTimeButton =
-    document.getElementById("syncCameraTimeButton");
+    document.getElementById(
+        "syncCameraTimeButton"
+    );
+
 
 const timeSyncStatus =
-    document.getElementById("timeSyncStatus");
+    document.getElementById(
+        "timeSyncStatus"
+    );
 
 
 // Kameranın mevcut tarih ve saat bilgisini oku
@@ -819,58 +1266,81 @@ async function getCameraTime() {
 
     try {
 
-        const response = await fetch(
-            "http://localhost:3000/api/camera/time"
-        );
+        const response =
+            await fetch(
+                "http://localhost:3000/api/camera/time"
+            );
+
 
         if (!response.ok) {
-            throw new Error("Kamera saat bilgisi alınamadı.");
+
+            throw new Error(
+                "Kamera saat bilgisi alınamadı."
+            );
         }
 
-        const xmlText = await response.text();
 
-        // XML'i JavaScript tarafından okunabilir hale getir
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(
-            xmlText,
-            "application/xml"
-        );
+        const xmlText =
+            await response.text();
+
+
+        const parser =
+            new DOMParser();
+
+
+        const xml =
+            parser.parseFromString(
+                xmlText,
+                "application/xml"
+            );
+
 
         const timeMode =
-            xml.querySelector("timeMode")?.textContent;
+            xml.querySelector(
+                "timeMode"
+            )?.textContent;
+
 
         const localTime =
-            xml.querySelector("localTime")?.textContent;
+            xml.querySelector(
+                "localTime"
+            )?.textContent;
+
 
         const timeZone =
-            xml.querySelector("timeZone")?.textContent;
+            xml.querySelector(
+                "timeZone"
+            )?.textContent;
 
 
         if (!localTime) {
-            throw new Error("Kamera zamanı bulunamadı.");
+
+            throw new Error(
+                "Kamera zamanı bulunamadı."
+            );
         }
 
 
-        // Kameranın ISO tarihini Date nesnesine dönüştür
-        const date = new Date(localTime);
+        const date =
+            new Date(localTime);
 
 
-        // Tarihi göster
         cameraDate.textContent =
-            date.toLocaleDateString("tr-TR");
+            date.toLocaleDateString(
+                "tr-TR"
+            );
 
 
-        // Saati göster
         cameraTime.textContent =
-            date.toLocaleTimeString("tr-TR");
+            date.toLocaleTimeString(
+                "tr-TR"
+            );
 
 
-        // Saat dilimini göster
         cameraTimezone.textContent =
             timeZone || "-";
 
 
-        // Zaman modunu göster
         cameraTimeMode.textContent =
             timeMode === "NTP"
                 ? "NTP (Otomatik)"
@@ -880,10 +1350,12 @@ async function getCameraTime() {
         timeSyncStatus.textContent =
             "Kamera saati güncel.";
 
+
         console.log(
             "Kamera zamanı:",
             localTime
         );
+
 
     } catch (error) {
 
@@ -901,7 +1373,8 @@ async function getCameraTime() {
 // Kamerayı NTP ile senkronize et
 async function syncCameraTime() {
 
-    syncCameraTimeButton.disabled = true;
+    syncCameraTimeButton.disabled =
+        true;
 
     syncCameraTimeButton.textContent =
         "⏳ Senkronize ediliyor...";
@@ -912,20 +1385,24 @@ async function syncCameraTime() {
 
     try {
 
-        const response = await fetch(
-            "http://localhost:3000/api/camera/time/ntp",
-            {
-                method: "PUT"
-            }
-        );
+        const response =
+            await fetch(
+                "http://localhost:3000/api/camera/time/ntp",
+                {
+                    method: "PUT"
+                }
+            );
 
 
-        const data = await response.json();
+        const data =
+            await response.json();
 
 
         if (!response.ok) {
+
             throw new Error(
-                data.error || "Senkronizasyon başarısız."
+                data.error ||
+                "Senkronizasyon başarısız."
             );
         }
 
@@ -934,7 +1411,6 @@ async function syncCameraTime() {
             "✓ Kamera saati başarıyla senkronize edildi.";
 
 
-        // Yeni zamanı kameradan tekrar oku
         await getCameraTime();
 
 
@@ -945,12 +1421,15 @@ async function syncCameraTime() {
             error
         );
 
+
         timeSyncStatus.textContent =
             "✕ Kamera saati senkronize edilemedi.";
 
+
     } finally {
 
-        syncCameraTimeButton.disabled = false;
+        syncCameraTimeButton.disabled =
+            false;
 
         syncCameraTimeButton.textContent =
             "🔄 Saati Senkronize Et";
@@ -958,54 +1437,78 @@ async function syncCameraTime() {
 }
 
 
-// Butona tıklanınca NTP senkronizasyonu yap
 syncCameraTimeButton.addEventListener(
     "click",
     syncCameraTime
 );
 
 
-// Sayfa açıldığında kameranın saatini oku
 getCameraTime();
 
 
-// Her 30 saniyede bir kameranın saatini güncelle
 setInterval(
     getCameraTime,
     30000
 );
 
-// =========================
-// Parlaklık ve Kontrast
-// =========================
 
-const brightnessSlider = document.getElementById("brightness");
-const contrastSlider = document.getElementById("contrast");
+// ========================================
+// PARLAKLIK VE KONTRAST
+// ========================================
+
+const brightnessSlider =
+    document.getElementById(
+        "brightness"
+    );
+
+const contrastSlider =
+    document.getElementById(
+        "contrast"
+    );
+
 
 async function updateImageSettings() {
 
-    const brightness = brightnessSlider.value;
-    const contrast = contrastSlider.value;
+    const brightness =
+        brightnessSlider.value;
+
+    const contrast =
+        contrastSlider.value;
+
 
     try {
 
-        const response = await fetch(
-            "http://localhost:3000/api/camera/image-settings",
-            {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    brightness: brightness,
-                    contrast: contrast
-                })
-            }
+        const response =
+            await fetch(
+                "http://localhost:3000/api/camera/image-settings",
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        brightness:
+                            brightness,
+
+                        contrast:
+                            contrast
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Görüntü ayarları:",
+            data
         );
 
-        const data = await response.json();
-
-        console.log("Görüntü ayarları:", data);
 
     } catch (error) {
 
@@ -1013,14 +1516,15 @@ async function updateImageSettings() {
             "Görüntü ayarı gönderilemedi:",
             error
         );
-
     }
 }
+
 
 brightnessSlider.addEventListener(
     "change",
     updateImageSettings
 );
+
 
 contrastSlider.addEventListener(
     "change",
@@ -1028,102 +1532,98 @@ contrastSlider.addEventListener(
 );
 
 
-async function updateImageSettings() {
-
-    const brightness = brightnessSlider.value;
-    const contrast = contrastSlider.value;
-
-    try {
-
-        const response = await fetch(
-            "http://localhost:3000/api/camera/image-settings",
-            {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    brightness: brightness,
-                    contrast: contrast
-                })
-            }
-        );
-
-        const data = await response.json();
-
-        console.log("Kamera görüntü ayarları:", data);
-
-    } catch (error) {
-
-        console.error("Görüntü ayarı gönderilemedi:", error);
-
-    }
-}
-
-brightnessSlider.addEventListener("change", updateImageSettings);
-contrastSlider.addEventListener("change", updateImageSettings);
+// ========================================
+// ÇÖZÜNÜRLÜK
+// ========================================
 
 const resolutionSelect =
-    document.getElementById("resolutionSelect");
+    document.getElementById(
+        "resolutionSelect"
+    );
+
 
 const applyResolutionButton =
-    document.getElementById("applyResolutionButton");
+    document.getElementById(
+        "applyResolutionButton"
+    );
+
 
 const resolutionStatus =
-    document.getElementById("resolutionStatus");
+    document.getElementById(
+        "resolutionStatus"
+    );
+
 
 async function getCameraResolution() {
 
     try {
 
-        const response = await fetch(
-            "http://localhost:3000/api/camera/resolution"
-        );
+        const response =
+            await fetch(
+                "http://localhost:3000/api/camera/resolution"
+            );
+
 
         if (!response.ok) {
+
             throw new Error(
                 "Kamera çözünürlüğü okunamadı."
             );
         }
 
-        const xmlText = await response.text();
 
-        const parser = new DOMParser();
+        const xmlText =
+            await response.text();
 
-        const xml = parser.parseFromString(
-            xmlText,
-            "application/xml"
-        );
+
+        const parser =
+            new DOMParser();
+
+
+        const xml =
+            parser.parseFromString(
+                xmlText,
+                "application/xml"
+            );
+
 
         const width =
             xml.querySelector(
                 "videoResolutionWidth"
             )?.textContent;
 
+
         const height =
             xml.querySelector(
                 "videoResolutionHeight"
             )?.textContent;
 
+
         if (!width || !height) {
+
             throw new Error(
                 "Çözünürlük bilgisi bulunamadı."
             );
         }
 
+
         const currentResolution =
             `${width}x${height}`;
+
 
         resolutionSelect.value =
             currentResolution;
 
+
         resolutionStatus.textContent =
             `Mevcut çözünürlük: ${width} × ${height}`;
+
 
         console.log(
             "Kamera çözünürlüğü:",
             currentResolution
         );
+
 
     } catch (error) {
 
@@ -1131,6 +1631,7 @@ async function getCameraResolution() {
             "Çözünürlük okunamadı:",
             error
         );
+
 
         resolutionStatus.textContent =
             "Kamera çözünürlüğü okunamadı.";
@@ -1143,50 +1644,72 @@ async function applyCameraResolution() {
     const selectedResolution =
         resolutionSelect.value;
 
-    const [width, height] =
+
+    const [
+        width,
+        height
+    ] =
         selectedResolution.split("x");
 
-    applyResolutionButton.disabled = true;
+
+    applyResolutionButton.disabled =
+        true;
+
 
     applyResolutionButton.textContent =
         "⏳ Uygulanıyor...";
 
+
     resolutionStatus.textContent =
         "Kamera çözünürlüğü değiştiriliyor...";
 
+
     try {
 
-        const response = await fetch(
-            "http://localhost:3000/api/camera/resolution",
-            {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    width: Number(width),
-                    height: Number(height)
-                })
-            }
-        );
+        const response =
+            await fetch(
+                "http://localhost:3000/api/camera/resolution",
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        width:
+                            Number(width),
+
+                        height:
+                            Number(height)
+                    })
+                }
+            );
+
 
         const data =
             await response.json();
 
+
         if (!response.ok) {
+
             throw new Error(
                 data.error ||
                 "Çözünürlük değiştirilemedi."
             );
         }
 
+
         resolutionStatus.textContent =
             `✓ Çözünürlük ${width} × ${height} olarak ayarlandı.`;
+
 
         console.log(
             "Yeni çözünürlük:",
             data
         );
+
 
     } catch (error) {
 
@@ -1195,12 +1718,15 @@ async function applyCameraResolution() {
             error
         );
 
+
         resolutionStatus.textContent =
             "✕ Çözünürlük değiştirilemedi.";
 
+
     } finally {
 
-        applyResolutionButton.disabled = false;
+        applyResolutionButton.disabled =
+            false;
 
         applyResolutionButton.textContent =
             "✓ Çözünürlüğü Uygula";
@@ -1213,6 +1739,7 @@ applyResolutionButton.addEventListener(
     applyCameraResolution
 );
 
+
 getCameraResolution();
 
 
@@ -1221,71 +1748,142 @@ getCameraResolution();
 // ========================================
 
 let humanDetectionModel = null;
+
 let detectionRunning = false;
+
 let detectionBusy = false;
 
+
+// İnsan algılamayı başlat
 async function startHumanDetection() {
 
     if (detectionRunning) {
-        return;
+
+        return true;
     }
+
 
     try {
 
-        console.log("İnsan algılama modeli yükleniyor...");
+        console.log(
+            "İnsan algılama modeli yükleniyor..."
+        );
 
-        humanDetectionModel = await cocoSsd.load();
 
-        console.log("İnsan algılama modeli hazır.");
+        // Hafif model kullan
+        humanDetectionModel =
+            await cocoSsd.load({
+                base: "lite_mobilenet_v2"
+            });
 
-        detectionRunning = true;
+
+        // Ethernet'te Sub Stream kullan
+        if (
+            currentMode === "ethernet"
+        ) {
+
+            if (
+                !startDetectionPlayer()
+            ) {
+
+                throw new Error(
+                    "Sub Stream başlatılamadı."
+                );
+            }
+        }
+
+
+        console.log(
+            "İnsan algılama modeli hazır."
+        );
+
+
+        detectionRunning =
+            true;
+
+        detectionBusy =
+            false;
+
 
         detectHumans();
+
+
+        return true;
+
 
     } catch (error) {
 
         console.error(
-            "İnsan algılama modeli yüklenemedi:",
+            "İnsan algılama başlatılamadı:",
             error
         );
 
+
+        humanDetectionModel =
+            null;
+
+        detectionRunning =
+            false;
+
+
+        return false;
     }
 }
 
+
+// İnsan algılamayı kontrol et
 async function detectHumans() {
 
     if (!detectionRunning) {
+
         return;
     }
 
+
+    const detectionSource =
+        currentMode === "ethernet" &&
+        detectionVideo
+            ? detectionVideo
+            : video;
+
+
     if (
         !humanDetectionModel ||
-        video.readyState < 2 ||
-        video.videoWidth === 0
+        !detectionSource ||
+        detectionSource.readyState < 2 ||
+        detectionSource.videoWidth === 0
     ) {
+
         setTimeout(
             detectHumans,
             500
         );
+
         return;
     }
 
+
     if (detectionBusy) {
+
         setTimeout(
             detectHumans,
             100
         );
+
         return;
     }
 
+
     detectionBusy = true;
+
 
     try {
 
         const predictions =
             await humanDetectionModel.detect(
-                video
+                detectionSource
             );
+
 
         const humans =
             predictions.filter(
@@ -1294,12 +1892,41 @@ async function detectHumans() {
                     prediction.score >= 0.50
             );
 
-        drawHumanBoxes(humans);
+
+        drawHumanBoxes(
+            humans,
+            detectionSource
+        );
+
+
+        if (
+            humans.length > 0
+        ) {
+
+            humanDetectionStatus.textContent =
+                "🟢 İNSAN ALGILANDI";
+
+
+            humanDetectionTime.textContent =
+                "Son algılama: " +
+                new Date().toLocaleString(
+                    "tr-TR"
+                );
+
+        } else if (
+            detectionRunning
+        ) {
+
+            humanDetectionStatus.textContent =
+                "⚪ İnsan algılanmıyor";
+        }
+
 
         console.log(
             "İnsan sayısı:",
             humans.length
         );
+
 
     } catch (error) {
 
@@ -1308,9 +1935,12 @@ async function detectHumans() {
             error
         );
 
+
     } finally {
 
-        detectionBusy = false;
+        detectionBusy =
+            false;
+
 
         setTimeout(
             detectHumans,
@@ -1320,72 +1950,119 @@ async function detectHumans() {
 }
 
 
-// İnsanların etrafına kutu çiz
-function drawHumanBoxes(humans) {
+// ========================================
+// İNSAN KUTULARI
+// ========================================
+
+function drawHumanBoxes(
+    humans,
+    detectionSource = video
+) {
 
     const overlay =
-        document.getElementById("detectionOverlay");
+        document.getElementById(
+            "detectionOverlay"
+        );
+
 
     if (!overlay) {
-        console.error("detectionOverlay bulunamadı.");
+
+        console.error(
+            "detectionOverlay bulunamadı."
+        );
+
         return;
     }
 
-    overlay.innerHTML = "";
 
-    const videoWidth = video.videoWidth;
-    const videoHeight = video.videoHeight;
+    overlay.innerHTML =
+        "";
+
+
+    const videoWidth =
+        detectionSource.videoWidth;
+
+    const videoHeight =
+        detectionSource.videoHeight;
+
 
     if (
         !videoWidth ||
         !videoHeight
     ) {
+
         return;
     }
 
-    // Video görüntüsünün ekranda gerçekten kapladığı alan
+
+    // Görüntünün ekranda kapladığı alan
     const containerWidth =
         video.parentElement.clientWidth;
 
     const containerHeight =
         video.parentElement.clientHeight;
 
+
     const videoRatio =
-        videoWidth / videoHeight;
+        videoWidth /
+        videoHeight;
+
 
     const containerRatio =
-        containerWidth / containerHeight;
+        containerWidth /
+        containerHeight;
+
 
     let displayWidth;
+
     let displayHeight;
+
     let offsetX;
+
     let offsetY;
 
-    if (videoRatio > containerRatio) {
 
-        // Görüntü yatay olarak daha geniş
-        displayWidth = containerWidth;
+    if (
+        videoRatio >
+        containerRatio
+    ) {
+
+        displayWidth =
+            containerWidth;
+
         displayHeight =
-            containerWidth / videoRatio;
+            containerWidth /
+            videoRatio;
 
-        offsetX = 0;
+        offsetX =
+            0;
+
         offsetY =
-            (containerHeight - displayHeight) / 2;
+            (
+                containerHeight -
+                displayHeight
+            ) / 2;
 
     } else {
 
-        // Görüntü dikey olarak daha uzun
-        displayHeight = containerHeight;
+        displayHeight =
+            containerHeight;
+
         displayWidth =
-            containerHeight * videoRatio;
+            containerHeight *
+            videoRatio;
 
         offsetX =
-            (containerWidth - displayWidth) / 2;
+            (
+                containerWidth -
+                displayWidth
+            ) / 2;
 
-        offsetY = 0;
+        offsetY =
+            0;
     }
 
-    // Overlay'ı gerçek video görüntüsüyle aynı boyuta getir
+
     overlay.style.left =
         `${offsetX}px`;
 
@@ -1399,278 +2076,462 @@ function drawHumanBoxes(humans) {
         `${displayHeight}px`;
 
 
-    humans.forEach(person => {
+    humans.forEach(
+        person => {
 
-        const [
-            x,
-            y,
-            width,
-            height
-        ] = person.bbox;
-
-
-        const box =
-            document.createElement("div");
-
-        box.style.position = "absolute";
-
-        box.style.left =
-            `${(x / videoWidth) * 100}%`;
-
-        box.style.top =
-            `${(y / videoHeight) * 100}%`;
-
-        box.style.width =
-            `${(width / videoWidth) * 100}%`;
-
-        box.style.height =
-            `${(height / videoHeight) * 100}%`;
-
-        box.style.border =
-            "3px solid red";
-
-        box.style.boxSizing =
-            "border-box";
-
-        box.style.pointerEvents =
-            "none";
+            const [
+                x,
+                y,
+                width,
+                height
+            ] =
+                person.bbox;
 
 
-        const label =
-            document.createElement("span");
-
-        label.textContent =
-            `İNSAN %${Math.round(
-                person.score * 100
-            )}`;
-
-        label.style.position =
-            "absolute";
-
-        label.style.left = "0";
-
-        label.style.top = "-28px";
-
-        label.style.background =
-            "red";
-
-        label.style.color =
-            "white";
-
-        label.style.padding =
-            "4px 8px";
-
-        label.style.fontSize =
-            "14px";
-
-        label.style.fontFamily =
-            "Arial, sans-serif";
-
-        label.style.fontWeight =
-            "bold";
+            const box =
+                document.createElement(
+                    "div"
+                );
 
 
-        box.appendChild(label);
+            box.style.position =
+                "absolute";
 
-        overlay.appendChild(box);
-    });
+
+            box.style.left =
+                `${(x / videoWidth) * 100}%`;
+
+
+            box.style.top =
+                `${(y / videoHeight) * 100}%`;
+
+
+            box.style.width =
+                `${(width / videoWidth) * 100}%`;
+
+
+            box.style.height =
+                `${(height / videoHeight) * 100}%`;
+
+
+            box.style.border =
+                "3px solid red";
+
+
+            box.style.boxSizing =
+                "border-box";
+
+
+            box.style.pointerEvents =
+                "none";
+
+
+            const label =
+                document.createElement(
+                    "span"
+                );
+
+
+            label.textContent =
+                `İNSAN %${Math.round(
+                    person.score * 100
+                )}`;
+
+
+            label.style.position =
+                "absolute";
+
+
+            label.style.left =
+                "0";
+
+
+            label.style.top =
+                "-28px";
+
+
+            label.style.background =
+                "red";
+
+
+            label.style.color =
+                "white";
+
+
+            label.style.padding =
+                "4px 8px";
+
+
+            label.style.fontSize =
+                "14px";
+
+
+            label.style.fontFamily =
+                "Arial, sans-serif";
+
+
+            label.style.fontWeight =
+                "bold";
+
+
+            box.appendChild(
+                label
+            );
+
+
+            overlay.appendChild(
+                box
+            );
+        }
+    );
 }
 
 
-// İnsan algılamayı başlat
+// İnsan algılama butonu
 const humanDetectionButton =
-    document.getElementById("humanDetectionButton");
+    document.getElementById(
+        "humanDetectionButton"
+    );
+
 
 const humanDetectionStatus =
-    document.getElementById("humanDetectionStatus");
-
-humanDetectionButton.addEventListener("click", async () => {
-
-    if (!detectionRunning) {
-
-        humanDetectionStatus.textContent =
-            "İnsan algılama başlatılıyor...";
-
-        await startHumanDetection();
-
-        humanDetectionButton.textContent =
-            "⏹ İnsan Algılamayı Durdur";
-
-        humanDetectionStatus.textContent =
-            "İnsan algılama aktif.";
-
-    } else {
-
-        detectionRunning = false;
-
-humanDetectionButton.textContent =
-    "▶ İnsan Algılamayı Başlat";
-
-humanDetectionStatus.textContent =
-    "İnsan algılama hazır.";
-
-humanDetectionTime.textContent =
-    "Son algılama: -";
-
-        const overlay =
-            document.getElementById("detectionOverlay");
-
-        if (overlay) {
-            overlay.innerHTML = "";
-        }
-    }
-
-});
-// ===============================
-// İNSAN ALGILAMA EVENT STREAM
-// ===============================
-
+    document.getElementById(
+        "humanDetectionStatus"
+    );
 
 
 const humanDetectionTime =
-    document.getElementById("humanDetectionTime");
+    document.getElementById(
+        "humanDetectionTime"
+    );
 
-const eventSource =
-    new EventSource("http://localhost:3000/api/camera/events");
 
-eventSource.onopen = () => {
+humanDetectionButton.addEventListener(
+    "click",
+    async () => {
 
-    console.log("İnsan algılama event bağlantısı kuruldu.");
-
-    humanDetectionStatus.textContent =
-        "🟢 Kamera olayları izleniyor...";
-
-};
-
-eventSource.onmessage = (event) => {
-
-    try {
-
-        const data = JSON.parse(event.data);
-
-        // Sadece gerçek XML kısmını al
-        const start = data.indexOf("<EventNotificationAlert");
-        const end = data.indexOf("</EventNotificationAlert>");
-
-        if (start === -1 || end === -1) {
-            return;
-        }
-
-        const xmlText = data.substring(
-            start,
-            end + "</EventNotificationAlert>".length
-        );
-
-        const parser = new DOMParser();
-
-        const xml = parser.parseFromString(
-            xmlText,
-            "application/xml"
-        );
-
-        const eventType =
-            xml.getElementsByTagName("eventType")[0]?.textContent;
-
-        const eventState =
-            xml.getElementsByTagName("eventState")[0]?.textContent;
-
-        const targetType =
-            xml.getElementsByTagName("targetType")[0]?.textContent;
-
-        const dateTime =
-            xml.getElementsByTagName("dateTime")[0]?.textContent;
-
-        console.log(
-            "ALGILAMA EVENT:",
-            eventType,
-            eventState,
-            targetType
-        );
-
-        // İnsan algılandı
-
-        if (!detectionRunning) {
-            return;
-        }
-        
         if (
-            eventType === "VMD" &&
-            targetType === "human" &&
-            eventState === "active"
-) {
-
-    humanDetectionStatus.textContent =
-        "🟢 İNSAN ALGILANDI";
-
-    // İnsan algılandığı anın yerel saatini göster
-    const detectionDate = new Date();
-
-    humanDetectionTime.textContent =
-        "Son algılama: " +
-        detectionDate.toLocaleString("tr-TR");
-}
-
-        // İnsan algılama sona erdi
-        if (
-            eventType === "VMD" &&
-            targetType === "human" &&
-            eventState === "inactive"
+            !detectionRunning
         ) {
 
             humanDetectionStatus.textContent =
-                "⚪ İnsan algılanmıyor";
+                "İnsan algılama başlatılıyor...";
 
+
+            const started =
+                await startHumanDetection();
+
+
+            if (started) {
+
+                humanDetectionButton.textContent =
+                    "⏹ İnsan Algılamayı Durdur";
+
+
+                humanDetectionStatus.textContent =
+                    "İnsan algılama aktif.";
+
+            } else {
+
+                humanDetectionStatus.textContent =
+                    "🔴 İnsan algılama başlatılamadı.";
+            }
+
+
+        } else {
+
+            detectionRunning =
+                false;
+
+            detectionBusy =
+                false;
+
+
+            if (
+                currentMode === "ethernet" &&
+                detectionPlayer
+            ) {
+
+                try {
+
+                    detectionPlayer.pause();
+
+                    detectionPlayer.unload();
+
+                    detectionPlayer.detachMediaElement();
+
+                    detectionPlayer.destroy();
+
+                } catch (error) {
+
+                    console.error(
+                        "Sub Stream durdurulamadı:",
+                        error
+                    );
+                }
+
+
+                detectionPlayer =
+                    null;
+            }
+
+
+            if (detectionVideo) {
+
+                detectionVideo.pause();
+
+                detectionVideo.removeAttribute(
+                    "src"
+                );
+
+                detectionVideo.load();
+
+                detectionVideo.style.display =
+                    "none";
+            }
+
+
+            humanDetectionButton.textContent =
+                "▶ İnsan Algılamayı Başlat";
+
+
+            humanDetectionStatus.textContent =
+                "İnsan algılama hazır.";
+
+
+            humanDetectionTime.textContent =
+                "Son algılama: -";
+
+
+            const overlay =
+                document.getElementById(
+                    "detectionOverlay"
+                );
+
+
+            if (overlay) {
+
+                overlay.innerHTML =
+                    "";
+            }
         }
 
-    } catch (error) {
-
-        console.error(
-            "İnsan algılama event'i okunamadı:",
-            error
-        );
-
     }
+);
 
-};
 
-eventSource.onerror = (error) => {
+// ========================================
+// İNSAN ALGILAMA EVENT STREAM
+// ========================================
 
-    console.error(
-        "Event stream bağlantı hatası:",
-        error
+const eventSource =
+    new EventSource(
+        "http://localhost:3000/api/camera/events"
     );
 
-    humanDetectionStatus.textContent =
-        "🔴 Kamera olay bağlantısı kesildi";
 
+eventSource.onopen = () => {
+
+    console.log(
+        "İnsan algılama event bağlantısı kuruldu."
+    );
 };
+
+
+eventSource.onmessage =
+    event => {
+
+        try {
+
+            const data =
+                JSON.parse(
+                    event.data
+                );
+
+
+            // Sadece gerçek XML kısmını al
+            const start =
+                data.indexOf(
+                    "<EventNotificationAlert"
+                );
+
+
+            const end =
+                data.indexOf(
+                    "</EventNotificationAlert>"
+                );
+
+
+            if (
+                start === -1 ||
+                end === -1
+            ) {
+
+                return;
+            }
+
+
+            const xmlText =
+                data.substring(
+                    start,
+                    end +
+                    "</EventNotificationAlert>"
+                        .length
+                );
+
+
+            const parser =
+                new DOMParser();
+
+
+            const xml =
+                parser.parseFromString(
+                    xmlText,
+                    "application/xml"
+                );
+
+
+            const eventType =
+                xml.getElementsByTagName(
+                    "eventType"
+                )[0]?.textContent;
+
+
+            const eventState =
+                xml.getElementsByTagName(
+                    "eventState"
+                )[0]?.textContent;
+
+
+            const targetType =
+                xml.getElementsByTagName(
+                    "targetType"
+                )[0]?.textContent;
+
+
+            console.log(
+                "ALGILAMA EVENT:",
+                eventType,
+                eventState,
+                targetType
+            );
+
+
+            if (
+                !detectionRunning
+            ) {
+
+                return;
+            }
+
+
+            if (
+                eventType === "VMD" &&
+                targetType === "human" &&
+                eventState === "active"
+            ) {
+
+                humanDetectionStatus.textContent =
+                    "🟢 İNSAN ALGILANDI";
+
+
+                const detectionDate =
+                    new Date();
+
+
+                humanDetectionTime.textContent =
+                    "Son algılama: " +
+                    detectionDate.toLocaleString(
+                        "tr-TR"
+                    );
+            }
+
+
+            if (
+                eventType === "VMD" &&
+                targetType === "human" &&
+                eventState === "inactive"
+            ) {
+
+                humanDetectionStatus.textContent =
+                    "⚪ İnsan algılanmıyor";
+            }
+
+
+        } catch (error) {
+
+            console.error(
+                "İnsan algılama event'i okunamadı:",
+                error
+            );
+        }
+    };
+
+
+eventSource.onerror =
+    error => {
+
+        console.error(
+            "Event stream bağlantı hatası:",
+            error
+        );
+    };
+
 
 // ========================================
 // GENEL HAREKET ALGILAMA
 // ========================================
 
 const cameraEventLog =
-    document.getElementById("cameraEventLog");
+    document.getElementById(
+        "cameraEventLog"
+    );
+
 
 const motionCanvas =
-    document.createElement("canvas");
+    document.createElement(
+        "canvas"
+    );
+
 
 const motionContext =
-    motionCanvas.getContext("2d", {
-        willReadFrequently: true
-    });
+    motionCanvas.getContext(
+        "2d",
+        {
+            willReadFrequently:
+                true
+        }
+    );
 
-motionCanvas.width = 320;
-motionCanvas.height = 180;
 
-let previousFrame = null;
-let motionRunning = false;
-let lastMotionTime = 0;
+motionCanvas.width =
+    320;
 
-const MOTION_INTERVAL = 150;
-const MOTION_THRESHOLD = 18;
-const MOTION_PIXEL_RATIO = 0.015;
-const MOTION_COOLDOWN = 700;
+motionCanvas.height =
+    180;
+
+
+let previousFrame =
+    null;
+
+let motionRunning =
+    false;
+
+let lastMotionTime =
+    0;
+
+
+const MOTION_INTERVAL =
+    150;
+
+const MOTION_THRESHOLD =
+    18;
+
+const MOTION_PIXEL_RATIO =
+    0.015;
+
+const MOTION_COOLDOWN =
+    700;
 
 
 // ========================================
@@ -1685,10 +2546,12 @@ function detectGeneralMotion() {
         video.readyState < 2 ||
         video.videoWidth === 0
     ) {
+
         setTimeout(
             detectGeneralMotion,
             MOTION_INTERVAL
         );
+
         return;
     }
 
@@ -1714,18 +2577,23 @@ function detectGeneralMotion() {
     // İlk kareyi referans olarak al
     if (!previousFrame) {
 
-        previousFrame = currentFrame;
+        previousFrame =
+            currentFrame;
+
 
         setTimeout(
             detectGeneralMotion,
             MOTION_INTERVAL
         );
 
+
         return;
     }
 
 
-    let changedPixels = 0;
+    let changedPixels =
+        0;
+
 
     const totalPixels =
         motionCanvas.width *
@@ -1762,33 +2630,45 @@ function detectGeneralMotion() {
             );
 
 
-        if (difference >= MOTION_THRESHOLD) {
+        if (
+            difference >=
+            MOTION_THRESHOLD
+        ) {
+
             changedPixels++;
         }
     }
 
 
     const changedRatio =
-        changedPixels / totalPixels;
+        changedPixels /
+        totalPixels;
 
 
-    const now = Date.now();
+    const now =
+        Date.now();
 
 
     // Yeterli miktarda görüntü değiştiyse hareket var
     if (
-        changedRatio >= MOTION_PIXEL_RATIO &&
-        now - lastMotionTime >= MOTION_COOLDOWN
+        changedRatio >=
+        MOTION_PIXEL_RATIO &&
+        now -
+        lastMotionTime >=
+        MOTION_COOLDOWN
     ) {
 
-        lastMotionTime = now;
+        lastMotionTime =
+            now;
+
 
         updateMotionEvent();
     }
 
 
     // Mevcut kareyi bir sonraki karşılaştırma için sakla
-    previousFrame = currentFrame;
+    previousFrame =
+        currentFrame;
 
 
     setTimeout(
@@ -1804,11 +2684,14 @@ function detectGeneralMotion() {
 
 function updateMotionEvent() {
 
-    const now = new Date();
+    const now =
+        new Date();
 
 
     const time =
-        now.toLocaleString("tr-TR");
+        now.toLocaleString(
+            "tr-TR"
+        );
 
 
     cameraEventLog.innerHTML = `
@@ -1829,12 +2712,16 @@ function updateMotionEvent() {
 
 function startGeneralMotionDetection() {
 
-    if (motionRunning) {
+    if (
+        motionRunning
+    ) {
+
         return;
     }
 
 
-    motionRunning = true;
+    motionRunning =
+        true;
 
 
     detectGeneralMotion();
@@ -1851,11 +2738,3 @@ function startGeneralMotionDetection() {
 // ========================================
 
 startGeneralMotionDetection();
-
-
-
-
-
-
-
-

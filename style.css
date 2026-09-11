@@ -100,32 +100,22 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
-
     padding: 5px;
-
     background: #0b1220;
     border: 1px solid #26344d;
-
     border-radius: 12px;
-
     margin-bottom: 18px;
 }
 
 .connection-button {
     border: none;
-
     background: transparent;
     color: #94a3b8;
-
     padding: 11px 8px;
-
     border-radius: 8px;
-
     font-size: 13px;
     font-weight: 600;
-
     cursor: pointer;
-
     transition: 0.2s ease;
 }
 
@@ -137,7 +127,6 @@ body {
 .connection-button.active {
     background: #26344d;
     color: #ffffff;
-
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
@@ -154,19 +143,14 @@ body {
     );
 
     border: 1px solid #2d3d5b;
-
     border-radius: 14px;
-
     padding: 16px;
-
     margin-bottom: 18px;
 }
 
 .ethernet-section h3 {
     font-size: 16px;
-
     margin-bottom: 5px;
-
     color: #f8fafc;
 }
 
@@ -177,39 +161,25 @@ body {
 
 .ethernet-section label {
     display: block;
-
     color: #64748b;
-
     font-size: 11px;
     font-weight: 600;
-
     text-transform: uppercase;
-
     letter-spacing: 0.7px;
-
     margin-top: 15px;
     margin-bottom: 7px;
 }
 
 #rtspUrl {
     width: 100%;
-
     height: 42px;
-
     padding: 0 12px;
-
     background: #0b1220;
-
     border: 1px solid #33445f;
-
     border-radius: 9px;
-
     color: #e2e8f0;
-
     font-size: 12px;
-
     outline: none;
-
     transition: 0.2s ease;
 }
 
@@ -219,8 +189,47 @@ body {
 
 #rtspUrl:focus {
     border-color: #64748b;
-
     box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.12);
+}
+
+
+/* =========================
+   STREAM SELECTOR
+========================= */
+
+.stream-selector {
+    margin-top: 12px;
+}
+
+.stream-selector label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#streamType {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 9px;
+    border: 1px solid #33445f;
+    background: #0b1220;
+    color: #e2e8f0;
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+}
+
+#streamType:hover {
+    border-color: #64748b;
+}
+
+#streamType:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
 
@@ -230,31 +239,20 @@ body {
 
 .connect-button {
     width: 100%;
-
     height: 42px;
-
     margin-top: 10px;
-
     border: 1px solid #3b82f6;
-
     border-radius: 9px;
-
     background: #2563eb;
-
     color: white;
-
     font-size: 13px;
-
     font-weight: 600;
-
     cursor: pointer;
-
     transition: 0.2s ease;
 }
 
 .connect-button:hover {
     background: #1d4ed8;
-
     transform: translateY(-1px);
 }
 
@@ -264,9 +262,7 @@ body {
 
 .connect-button:disabled {
     opacity: 0.6;
-
     cursor: wait;
-
     transform: none;
 }
 
@@ -277,11 +273,8 @@ body {
 
 .rtsp-status {
     margin-top: 10px;
-
     color: #64748b;
-
     font-size: 11px;
-
     line-height: 1.4;
 }
 
@@ -294,7 +287,6 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-
     margin-bottom: 16px;
 }
 
@@ -304,91 +296,67 @@ body {
 
 .panel-title span {
     background: #1e293b;
-
     color: #cbd5e1;
-
     min-width: 30px;
     height: 30px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     border-radius: 8px;
-
     font-size: 13px;
 }
 
 .camera-list {
     display: flex;
     flex-direction: column;
-
     gap: 10px;
 }
 
 .camera-item {
     background: #172033;
-
     border: 1px solid #26344d;
-
     padding: 13px;
-
     border-radius: 11px;
-
     cursor: pointer;
-
     transition: 0.2s ease;
 }
 
 .camera-item:hover {
     background: #1d2a42;
-
     transform: translateY(-1px);
 }
 
 .camera-item.selected {
     border-color: #22c55e;
-
     background: #172b27;
-
     box-shadow: 0 0 15px rgba(34, 197, 94, 0.08);
 }
 
 .camera-name {
     font-weight: bold;
-
     font-size: 13px;
-
     margin-bottom: 7px;
 }
 
 .camera-type {
     color: #94a3b8;
-
     font-size: 12px;
-
     margin-bottom: 9px;
 }
 
 .camera-status {
     display: flex;
     align-items: center;
-
     gap: 6px;
-
     color: #4ade80;
-
     font-size: 12px;
 }
 
 .camera-status-dot {
     width: 7px;
     height: 7px;
-
     background: #22c55e;
-
     border-radius: 50%;
-
     box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
 }
 
@@ -399,15 +367,12 @@ body {
 
 .empty-state {
     text-align: center;
-
     padding: 25px 10px;
-
     color: #64748b;
 }
 
 .empty-state div {
     font-size: 30px;
-
     margin-bottom: 8px;
 }
 
@@ -424,56 +389,41 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-
     margin-bottom: 18px;
 }
 
 .video-header h2 {
     font-size: 20px;
-
     margin-bottom: 5px;
 }
 
 .video-header p {
     color: #94a3b8;
-
     font-size: 14px;
 }
 
 .live-badge {
     background: #3b171c;
-
     color: #f87171;
-
     padding: 7px 12px;
-
     border-radius: 8px;
-
     font-size: 12px;
-
     font-weight: bold;
 }
 
 
 /* =========================
-VIDEO
+   VIDEO
 ========================= */
 
 .video-container {
     position: relative;
-
     width: 100%;
     height: 750px;
-
     background: #020617;
-
     border-radius: 12px;
-
     overflow: hidden;
-
     border: 1px solid #1e293b;
-
-    position: relative;
 }
 
 #detectionOverlay {
@@ -489,31 +439,31 @@ VIDEO
 #video {
     width: 100%;
     height: 100%;
-
     object-fit: contain;
-
     display: none;
+}
+
+#detectionVideo {
+    display: none !important;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .no-camera {
     position: absolute;
-
     inset: 0;
-
     display: flex;
-
     flex-direction: column;
-
     align-items: center;
-
     justify-content: center;
-
     text-align: center;
 }
 
 .camera-icon {
     font-size: 55px;
-
     margin-bottom: 15px;
 }
 
@@ -523,42 +473,32 @@ VIDEO
 
 .no-camera p {
     color: #64748b;
-
     font-size: 14px;
 }
 
 
 /* =========================
-VIDEO INFO
+   VIDEO INFO
 ========================= */
 
 .video-info {
     display: grid;
-
     grid-template-columns: repeat(3, 1fr);
-
     gap: 15px;
-
     margin-top: 18px;
 }
 
 .video-info > div {
     background: #172033;
-
     border: 1px solid #26344d;
-
     padding: 14px;
-
     border-radius: 10px;
 }
 
 .info-label {
     display: block;
-
     color: #64748b;
-
     font-size: 12px;
-
     margin-bottom: 6px;
 }
 
@@ -568,7 +508,7 @@ VIDEO INFO
 
 
 /* =========================
-RESPONSIVE
+   RESPONSIVE
 ========================= */
 
 @media (max-width: 1000px) {
@@ -580,7 +520,6 @@ RESPONSIVE
     .video-container {
         height: 600px;
     }
-
 }
 
 @media (max-width: 900px) {
@@ -592,7 +531,6 @@ RESPONSIVE
     .video-container {
         height: 500px;
     }
-
 }
 
 @media (max-width: 600px) {
@@ -604,9 +542,7 @@ RESPONSIVE
 
     .header {
         flex-direction: column;
-
         align-items: flex-start;
-
         gap: 15px;
     }
 
@@ -621,8 +557,12 @@ RESPONSIVE
     .video-container {
         height: 350px;
     }
-
 }
+
+
+/* =========================
+   DISCONNECT BUTTON
+========================= */
 
 .disconnect-button {
     width: 100%;
@@ -651,6 +591,11 @@ RESPONSIVE
 .disconnect-button:active {
     transform: scale(0.98);
 }
+
+
+/* =========================
+   LATENCY
+========================= */
 
 .latency-display {
     display: inline-flex;
@@ -691,13 +636,16 @@ RESPONSIVE
 
     box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
 }
+
+
 /* =========================
-Kamera Kontrolleri
+   KAMERA KONTROLLERİ
 ========================= */
 
 .camera-controls {
     margin-top: 16px;
     padding: 16px;
+
     background: #101827;
     border: 1px solid #26344d;
     border-radius: 12px;
@@ -772,8 +720,9 @@ Kamera Kontrolleri
     color: #bfdbfe;
 }
 
+
 /* =========================
-Kamera Tarih / Saat
+   KAMERA TARİH / SAAT
 ========================= */
 
 .time-info {
@@ -813,7 +762,7 @@ Kamera Tarih / Saat
 }
 
 .camera-time-section {
-    margin-top:18px;
+    margin-top: 18px;
 }
 
 .resolution-control {
@@ -831,9 +780,11 @@ Kamera Tarih / Saat
     width: 100%;
     padding: 11px 12px;
     border-radius: 8px;
+
     border: 1px solid #555;
     background: #202b3f;
     color: white;
+
     font-size: 14px;
     margin-bottom: 10px;
     cursor: pointer;
@@ -851,7 +802,11 @@ Kamera Tarih / Saat
     margin-top: 8px;
 }
 
-/* Keskinlik Kontrolü */
+
+/* =========================
+   KESKİNLİK
+========================= */
+
 #sharpnessSlider {
     width: 100%;
     cursor: pointer;
@@ -865,10 +820,15 @@ Kamera Tarih / Saat
     font-size: 14px;
 }
 
-/* Kamera olayları */
+
+/* =========================
+   KAMERA OLAYLARI
+========================= */
+
 .camera-events {
     margin-top: 15px;
     padding: 15px;
+
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
@@ -877,13 +837,13 @@ Kamera Tarih / Saat
 .camera-events .info-label {
     display: block;
     margin-bottom: 10px;
-
 }
 
 #cameraEventLog {
-    min-height:45px;
+    min-height: 45px;
     max-height: 180px;
     overflow-y: auto;
+
     font-size: 14px;
     line-height: 1.5;
 }
@@ -891,11 +851,10 @@ Kamera Tarih / Saat
 .camera-event {
     padding: 8px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-
 }
+
 .camera-event:last-child {
     border-bottom: none;
-
 }
 
 .camera-event-time {
