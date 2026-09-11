@@ -147,6 +147,10 @@
     >
         İnsan algılama hazır.
     </div>
+
+    <div id="humanDetectionTime" class="control-status">
+        Son algılama : -
+    </div>
 </div>
 
     <!-- Görüntü döndürme -->
@@ -238,20 +242,6 @@
     </div>
 
 </div>
-
-<div class="camera-control-section human-detection-section">
-    <h3>👤 İNSAN ALGILAMA</h3>
-
-    <div id="humanDetectionStatus" class="human-detection-status">
-        ⚪ İnsan algılama bekleniyor...
-    </div>
-
-    <div id="humanDetectionTime" class="human-detection-time">
-        Son algılama: -
-    </div>
-</div>
-
-
 
 
                     <p id="rtspStatus" class="rtsp-status">
@@ -368,12 +358,15 @@
                     </div>
 
                     <div class="camera-events">
-                        <span class="info-label">Kamera Olayları</span>,
+                        <span class="info-label">Kamera Olayları</span>
 
-                        <div id = "cameraEventLog">Henüz hareket algılanmadı.
+                        <div id="cameraEventLog">
+                            ⚪ Henüz hareket algılanmadı.
+                        
                         </div>
                     </div>
 
+                
                 </div>
 
             </section>

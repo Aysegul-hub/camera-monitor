@@ -1252,7 +1252,6 @@ async function startHumanDetection() {
     }
 }
 
-
 async function detectHumans() {
 
     if (!detectionRunning) {
@@ -1264,13 +1263,18 @@ async function detectHumans() {
         video.readyState < 2 ||
         video.videoWidth === 0
     ) {
-        requestAnimationFrame(detectHumans);
+        setTimeout(
+            detectHumans,
+            500
+        );
         return;
     }
 
-    // Önceki algılama bitmeden yenisini başlatma
     if (detectionBusy) {
-        requestAnimationFrame(detectHumans);
+        setTimeout(
+            detectHumans,
+            100
+        );
         return;
     }
 
@@ -1279,15 +1283,23 @@ async function detectHumans() {
     try {
 
         const predictions =
-            await humanDetectionModel.detect(video);
+            await humanDetectionModel.detect(
+                video
+            );
 
-        const humans = predictions.filter(
-            prediction =>
-                prediction.class === "person" &&
-                prediction.score >= 0.50
-        );
+        const humans =
+            predictions.filter(
+                prediction =>
+                    prediction.class === "person" &&
+                    prediction.score >= 0.50
+            );
 
         drawHumanBoxes(humans);
+
+        console.log(
+            "İnsan sayısı:",
+            humans.length
+        );
 
     } catch (error) {
 
@@ -1296,11 +1308,15 @@ async function detectHumans() {
             error
         );
 
+    } finally {
+
+        detectionBusy = false;
+
+        setTimeout(
+            detectHumans,
+            500
+        );
     }
-
-    detectionBusy = false;
-
-    requestAnimationFrame(detectHumans);
 }
 
 
@@ -1311,6 +1327,7 @@ function drawHumanBoxes(humans) {
         document.getElementById("detectionOverlay");
 
     if (!overlay) {
+        console.error("detectionOverlay bulunamadı.");
         return;
     }
 
@@ -1318,6 +1335,69 @@ function drawHumanBoxes(humans) {
 
     const videoWidth = video.videoWidth;
     const videoHeight = video.videoHeight;
+
+    if (
+        !videoWidth ||
+        !videoHeight
+    ) {
+        return;
+    }
+
+    // Video görüntüsünün ekranda gerçekten kapladığı alan
+    const containerWidth =
+        video.parentElement.clientWidth;
+
+    const containerHeight =
+        video.parentElement.clientHeight;
+
+    const videoRatio =
+        videoWidth / videoHeight;
+
+    const containerRatio =
+        containerWidth / containerHeight;
+
+    let displayWidth;
+    let displayHeight;
+    let offsetX;
+    let offsetY;
+
+    if (videoRatio > containerRatio) {
+
+        // Görüntü yatay olarak daha geniş
+        displayWidth = containerWidth;
+        displayHeight =
+            containerWidth / videoRatio;
+
+        offsetX = 0;
+        offsetY =
+            (containerHeight - displayHeight) / 2;
+
+    } else {
+
+        // Görüntü dikey olarak daha uzun
+        displayHeight = containerHeight;
+        displayWidth =
+            containerHeight * videoRatio;
+
+        offsetX =
+            (containerWidth - displayWidth) / 2;
+
+        offsetY = 0;
+    }
+
+    // Overlay'ı gerçek video görüntüsüyle aynı boyuta getir
+    overlay.style.left =
+        `${offsetX}px`;
+
+    overlay.style.top =
+        `${offsetY}px`;
+
+    overlay.style.width =
+        `${displayWidth}px`;
+
+    overlay.style.height =
+        `${displayHeight}px`;
+
 
     humans.forEach(person => {
 
@@ -1328,9 +1408,12 @@ function drawHumanBoxes(humans) {
             height
         ] = person.bbox;
 
-        const box = document.createElement("div");
+
+        const box =
+            document.createElement("div");
 
         box.style.position = "absolute";
+
         box.style.left =
             `${(x / videoWidth) * 100}%`;
 
@@ -1343,34 +1426,53 @@ function drawHumanBoxes(humans) {
         box.style.height =
             `${(height / videoHeight) * 100}%`;
 
-        box.style.border = "3px solid red";
-        box.style.boxSizing = "border-box";
+        box.style.border =
+            "3px solid red";
 
-        box.style.pointerEvents = "none";
+        box.style.boxSizing =
+            "border-box";
 
-        const label = document.createElement("span");
+        box.style.pointerEvents =
+            "none";
+
+
+        const label =
+            document.createElement("span");
 
         label.textContent =
-            `İNSAN %${Math.round(person.score * 100)}`;
+            `İNSAN %${Math.round(
+                person.score * 100
+            )}`;
 
-        label.style.position = "absolute";
+        label.style.position =
+            "absolute";
+
         label.style.left = "0";
+
         label.style.top = "-28px";
 
-        label.style.background = "red";
-        label.style.color = "white";
+        label.style.background =
+            "red";
 
-        label.style.padding = "4px 8px";
+        label.style.color =
+            "white";
 
-        label.style.fontSize = "14px";
-        label.style.fontFamily = "Arial, sans-serif";
+        label.style.padding =
+            "4px 8px";
 
-        label.style.fontWeight = "bold";
+        label.style.fontSize =
+            "14px";
+
+        label.style.fontFamily =
+            "Arial, sans-serif";
+
+        label.style.fontWeight =
+            "bold";
+
 
         box.appendChild(label);
 
         overlay.appendChild(box);
-
     });
 }
 
@@ -1401,11 +1503,14 @@ humanDetectionButton.addEventListener("click", async () => {
 
         detectionRunning = false;
 
-        humanDetectionButton.textContent =
-            "▶ İnsan Algılamayı Başlat";
+humanDetectionButton.textContent =
+    "▶ İnsan Algılamayı Başlat";
 
-        humanDetectionStatus.textContent =
-            "İnsan algılama durduruldu.";
+humanDetectionStatus.textContent =
+    "İnsan algılama hazır.";
+
+humanDetectionTime.textContent =
+    "Son algılama: -";
 
         const overlay =
             document.getElementById("detectionOverlay");
@@ -1483,26 +1588,27 @@ eventSource.onmessage = (event) => {
         );
 
         // İnsan algılandı
+
+        if (!detectionRunning) {
+            return;
+        }
+        
         if (
             eventType === "VMD" &&
             targetType === "human" &&
             eventState === "active"
-        ) {
+) {
 
-            humanDetectionStatus.textContent =
-                "🟢 İNSAN ALGILANDI";
+    humanDetectionStatus.textContent =
+        "🟢 İNSAN ALGILANDI";
 
-            if (dateTime) {
+    // İnsan algılandığı anın yerel saatini göster
+    const detectionDate = new Date();
 
-                const date = new Date(dateTime);
-
-                humanDetectionTime.textContent =
-                    "Son algılama: " +
-                    date.toLocaleString("tr-TR");
-
-            }
-
-        }
+    humanDetectionTime.textContent =
+        "Son algılama: " +
+        detectionDate.toLocaleString("tr-TR");
+}
 
         // İnsan algılama sona erdi
         if (
@@ -1538,6 +1644,214 @@ eventSource.onerror = (error) => {
         "🔴 Kamera olay bağlantısı kesildi";
 
 };
+
+// ========================================
+// GENEL HAREKET ALGILAMA
+// ========================================
+
+const cameraEventLog =
+    document.getElementById("cameraEventLog");
+
+const motionCanvas =
+    document.createElement("canvas");
+
+const motionContext =
+    motionCanvas.getContext("2d", {
+        willReadFrequently: true
+    });
+
+motionCanvas.width = 320;
+motionCanvas.height = 180;
+
+let previousFrame = null;
+let motionRunning = false;
+let lastMotionTime = 0;
+
+const MOTION_INTERVAL = 150;
+const MOTION_THRESHOLD = 18;
+const MOTION_PIXEL_RATIO = 0.015;
+const MOTION_COOLDOWN = 700;
+
+
+// ========================================
+// HAREKET KONTROLÜ
+// ========================================
+
+function detectGeneralMotion() {
+
+    if (
+        currentMode !== "ethernet" ||
+        !video ||
+        video.readyState < 2 ||
+        video.videoWidth === 0
+    ) {
+        setTimeout(
+            detectGeneralMotion,
+            MOTION_INTERVAL
+        );
+        return;
+    }
+
+
+    motionContext.drawImage(
+        video,
+        0,
+        0,
+        motionCanvas.width,
+        motionCanvas.height
+    );
+
+
+    const currentFrame =
+        motionContext.getImageData(
+            0,
+            0,
+            motionCanvas.width,
+            motionCanvas.height
+        );
+
+
+    // İlk kareyi referans olarak al
+    if (!previousFrame) {
+
+        previousFrame = currentFrame;
+
+        setTimeout(
+            detectGeneralMotion,
+            MOTION_INTERVAL
+        );
+
+        return;
+    }
+
+
+    let changedPixels = 0;
+
+    const totalPixels =
+        motionCanvas.width *
+        motionCanvas.height;
+
+
+    // İki kare arasındaki farkı hesapla
+    for (
+        let i = 0;
+        i < currentFrame.data.length;
+        i += 4
+    ) {
+
+        const currentBrightness =
+            (
+                currentFrame.data[i] +
+                currentFrame.data[i + 1] +
+                currentFrame.data[i + 2]
+            ) / 3;
+
+
+        const previousBrightness =
+            (
+                previousFrame.data[i] +
+                previousFrame.data[i + 1] +
+                previousFrame.data[i + 2]
+            ) / 3;
+
+
+        const difference =
+            Math.abs(
+                currentBrightness -
+                previousBrightness
+            );
+
+
+        if (difference >= MOTION_THRESHOLD) {
+            changedPixels++;
+        }
+    }
+
+
+    const changedRatio =
+        changedPixels / totalPixels;
+
+
+    const now = Date.now();
+
+
+    // Yeterli miktarda görüntü değiştiyse hareket var
+    if (
+        changedRatio >= MOTION_PIXEL_RATIO &&
+        now - lastMotionTime >= MOTION_COOLDOWN
+    ) {
+
+        lastMotionTime = now;
+
+        updateMotionEvent();
+    }
+
+
+    // Mevcut kareyi bir sonraki karşılaştırma için sakla
+    previousFrame = currentFrame;
+
+
+    setTimeout(
+        detectGeneralMotion,
+        MOTION_INTERVAL
+    );
+}
+
+
+// ========================================
+// KAMERA OLAYINI GÜNCELLE
+// ========================================
+
+function updateMotionEvent() {
+
+    const now = new Date();
+
+
+    const time =
+        now.toLocaleString("tr-TR");
+
+
+    cameraEventLog.innerHTML = `
+        <div class="camera-event">
+            <strong>🟢 Hareket algılandı</strong>
+
+            <div class="camera-event-time">
+                Son hareket: ${time}
+            </div>
+        </div>
+    `;
+}
+
+
+// ========================================
+// GENEL HAREKET ALGILAMAYI BAŞLAT
+// ========================================
+
+function startGeneralMotionDetection() {
+
+    if (motionRunning) {
+        return;
+    }
+
+
+    motionRunning = true;
+
+
+    detectGeneralMotion();
+
+
+    console.log(
+        "Genel hareket algılama aktif."
+    );
+}
+
+
+// ========================================
+// SAYFA AÇILINCA HAREKET ALGILAMAYI BAŞLAT
+// ========================================
+
+startGeneralMotionDetection();
+
 
 
 
